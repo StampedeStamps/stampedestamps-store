@@ -74,6 +74,9 @@
   .verse { font-style: italic; color: var(--soft); margin: 0 0 1.25rem; }
   .hero-photo { --r: 7px; padding: 1.1rem; }
   .hero-photo .frame { border: 2px solid var(--purple); aspect-ratio: 4 / 3; }
+  /* Until images/hero.jpg is uploaded, hide the empty hero frame instead of showing its placeholder */
+  .hero-photo:has(.slot.missing) { display: none; }
+  .hero-row:has(.slot.missing) { grid-template-columns: 1fr; }
 
   /* ---------- Photo slots: a dashed box shows until the photo is uploaded ---------- */
   .slot { position: relative; overflow: hidden; }

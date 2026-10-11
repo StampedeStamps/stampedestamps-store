@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>About | StampedeUSA</title>
+<meta name="description" content="About StampedeUSA: a U.S. stamp shop selling on eBay since 2003, eBay Top Rated Seller, every item offered exactly as shown with combined shipping.">
+<meta name="theme-color" content="#4B006E">
+<style>
+  /* Same look as Stamp Stories (stampedestamps.github.io/stampede-stories) */
+  @font-face {
+    font-family: "League Gothic";
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url("fonts/league-gothic-latin-400-normal.woff2") format("woff2"),
+         url("https://stampedestamps.github.io/stampede-stories/assets/fonts/league-gothic-latin-400-normal.woff2") format("woff2");
+  }
+  :root {
+    --purple: #4B006E; --lilac: #D7B8F0; --page: #F6F4FA; --grid: #E7E2EF; --paper: #FFFFFF;
+    --ink: #1F1D2B; --cancel: #B3261E; --soft: #5B566A; --link: var(--purple); --head: var(--purple);
+    --edge: rgba(75,0,110,.55); --rule: #DCD5E6;
+    --gothic: "League Gothic","Oswald","Arial Narrow",Impact,sans-serif;
+    --serif: Charter,"Bitstream Charter","Sitka Text",Cambria,Georgia,serif;
+    color-scheme: light dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --page: #1C1A22; --grid: transparent; --paper: #2A2732; --ink: #ECE8F3; --cancel: #FF8A80;
+      --soft: #B9B2C6; --link: var(--lilac); --head: var(--lilac); --edge: rgba(215,184,240,.5); --rule: #3A3644; }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+  body {
+    margin: 0; background-color: var(--page); color: var(--ink); font: 1.0625rem/1.6 var(--serif);
+    background-image: linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+    background-size: 24px 24px;
+  }
+  a { color: var(--link); text-underline-offset: .18em; text-decoration-thickness: 1px; }
+  a:hover { text-decoration-thickness: 2px; }
+  :focus-visible { outline: 3px solid var(--cancel); outline-offset: 3px; }
+  .skip { position: absolute; left: -999px; top: 0; }
+  .skip:focus { left: 1rem; top: .5rem; z-index: 9; background: var(--paper); padding: .4rem .7rem; }
+  h1, h2, h3 { font-family: var(--gothic); font-weight: 400; letter-spacing: .01em; line-height: 1.05; color: var(--head); margin: 0; }
+  main { display: block; max-width: 72rem; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+
+  /* ---------- Selvage header with the 5-page menu ---------- */
+  .selvage { background: var(--purple); color: #fff; }
+  .selvage a { color: #fff; }
+  .selvage :focus-visible { outline-color: #fff; }
+  .top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .4rem 1.5rem;
+    max-width: 72rem; margin: 0 auto; padding: .7rem 1rem; }
+  .mark { font-family: var(--gothic); font-size: 2rem; line-height: 1; text-decoration: none; letter-spacing: .02em; }
+  .mark small { font-family: var(--serif); font-size: .95rem; letter-spacing: 0; opacity: .92; margin-left: .45rem; }
+  .menu ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .2rem 1.1rem; }
+  .menu a { font-size: .98rem; text-decoration: none; padding: .15rem 0; border-bottom: 2px solid transparent; }
+  .menu a:hover { border-bottom-color: var(--lilac); }
+  .menu a[aria-current="page"] { border-bottom-color: #fff; }
+
+  /* ---------- Perforated stamp edge (same trick as Stamp Stories) ---------- */
+  .perf { position: relative; isolation: isolate; --r: 5px; }
+  .perf::before {
+    content: ""; position: absolute; inset: 0; z-index: -1; background: var(--paper);
+    -webkit-mask: radial-gradient(var(--r),#0000 96%,#000) round calc(-1.5*var(--r)) calc(-1.5*var(--r))/calc(3*var(--r)) calc(3*var(--r)),
+      linear-gradient(#000 0 0) no-repeat 50%/calc(100% - 3*var(--r)) calc(100% - 3*var(--r));
+    mask: radial-gradient(var(--r),#0000 96%,#000) round calc(-1.5*var(--r)) calc(-1.5*var(--r))/calc(3*var(--r)) calc(3*var(--r)),
+      linear-gradient(#000 0 0) no-repeat 50%/calc(100% - 3*var(--r)) calc(100% - 3*var(--r));
+  }
+  .edged { filter: drop-shadow(0 0 1px var(--edge)); }
+
+  /* ---------- Hero ---------- */
+  .hero h1 { font-size: clamp(2.6rem, 9vw, 4.4rem); max-width: 18ch; }
+  .hero .lede { font-size: 1.15rem; max-width: 42rem; margin: .8rem 0 1rem; }
+  .verse { font-style: italic; color: var(--soft); margin: 0; max-width: 42rem; }
+
+  /* ---------- The "certificate": shop facts as a framed stamp ---------- */
+  .cert { --r: 7px; padding: 1.4rem; margin: 2rem 0 0; }
+  .cert .frame { border: 2px solid var(--purple); padding: 1.2rem 1rem; display: grid; gap: 1rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  @media (prefers-color-scheme: dark) { .cert .frame { border-color: var(--lilac); } }
+  .fact b { display: block; font-family: var(--gothic); font-weight: 400; font-size: clamp(2rem, 6vw, 2.8rem); line-height: 1; color: var(--head); }
+  .fact span { display: block; color: var(--soft); font-size: .95rem; margin-top: .25rem; }
+
+  /* ---------- Sections ---------- */
+  .block { margin: 2.8rem 0 0; scroll-margin-top: 1rem; }
+  .block > h2 { font-size: 2.3rem; border-bottom: 2px solid var(--purple); padding-bottom: .35rem; display: flex;
+    justify-content: space-between; align-items: baseline; gap: 1rem; flex-wrap: wrap; }
+  .block > h2 a { font-family: var(--serif); font-size: 1rem; letter-spacing: 0; }
+  @media (prefers-color-scheme: dark) { .block > h2 { border-color: var(--lilac); } }
+  .prose { max-width: 44rem; }
+  .prose p { margin: .9rem 0 0; font-size: 1.1rem; }
+
+  /* Promises: perforated stamp cards */
+  .stamps { list-style: none; padding: 0; margin: 1.1rem 0 0; display: grid; gap: 1.1rem;
+    grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); }
+  .stamps li { display: flex; }
+  .stamps .card { flex: 1; padding: 1.3rem 1.2rem 1.1rem; }
+  .stamps h3 { font-size: 1.6rem; }
+  .stamps p { margin: .45rem 0 0; }
+
+  /* What we sell: ruled rows */
+  .rows { list-style: none; padding: 0; margin: .4rem 0 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); column-gap: 2rem; }
+  .rows li { padding: .55rem 0; border-bottom: 1px solid var(--rule); }
+
+  /* Find us */
+  .btn { display: block; text-align: center; background: var(--purple); color: #fff; font-family: var(--gothic);
+    font-size: 1.6rem; letter-spacing: .03em; line-height: 1; padding: .9rem 1rem; margin: 1.1rem 0 .6rem;
+    text-decoration: none; border-radius: 4px; border: 2px solid var(--purple); }
+  @media (prefers-color-scheme: dark) { .btn { border-color: var(--lilac); } }
+  @media (prefers-reduced-motion: no-preference) {
+    .btn { transition: transform .08s ease-out; }
+    .btn:active { transform: translateY(1px); }
+  }
+  .links { list-style: none; padding: 0; margin: .6rem 0 0; display: flex; flex-wrap: wrap; gap: .4rem 1.8rem; }
+  .links a { font-size: 1.06rem; }
+
+  /* Footer */
+  footer.selvage { margin-top: 2rem; }
+  .foot { max-width: 72rem; margin: 0 auto; padding: 1.4rem 1rem 1.8rem; display: flex; flex-wrap: wrap; gap: .4rem 2rem; align-items: baseline; }
+  .sign { font-family: var(--gothic); font-size: 1.7rem; margin: 0; }
+  .foot p { margin: 0; }
+  .tags { flex-basis: 100%; font-size: .9rem; opacity: .85; }
+
+  @media (min-width: 44rem) {
+    .cert .frame { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .btn { display: inline-block; padding: .9rem 2.6rem; }
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to the story</a>
+
+<!-- ===================== HEADER + MENU (same on all 5 pages) ===================== -->
+<header class="selvage">
+  <div class="top">
+    <a class="mark" href="index.html">STAMPede USA<small>stamps &amp; postal history</small></a>
+    <nav class="menu" aria-label="Main menu">
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="shop.html">Shop</a></li>
+        <li><a href="sale.html">Sale</a></li>
+        <li><a href="about.html" aria-current="page">About</a></li>
+        <li><a href="feedback.html">Feedback</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- ===================== HERO ===================== -->
+  <section class="hero">
+    <h1>A small shop with a big love of stamps.</h1>
+    <p class="lede">StampedeUSA is a U.S. stamp shop on eBay. We list sheets and panes, singles, plate blocks, covers and postal history, revenues and a few travelers from abroad, with low starting bids and honest descriptions.</p>
+    <p class="verse">Combine wins, shipping drops too, follow us &mdash; fresh finds for you.<br>From U.S. classics to worldwide flair, low starting bids &mdash; find value here!</p>
+
+    <!-- Facts from the eBay store's own About tab and header -->
+    <div class="cert perf edged">
+      <div class="frame">
+        <div class="fact"><b>2003</b><span>On eBay since August 2003</span></div>
+        <div class="fact"><b>Top Rated</b><span>eBay Top Rated Seller</span></div>
+        <div class="fact"><b>100%</b><span>Positive feedback</span></div>
+        <div class="fact"><b>U.S.A.</b><span>Ships from the United States</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== OUR STORY ===================== -->
+  <section class="block" id="story">
+    <h2>Every stamp has a story</h2>
+    <div class="prose">
+      <p>A stamp is a tiny piece of history you can hold: a president, a moon landing, a flower, a cartoon duck. We love finding those pieces, figuring out exactly what they are, and sending them on to collectors who will enjoy them as much as we do.</p>
+      <p>That is why our sister site, <a href="https://stampedestamps.github.io/stampede-stories/index.html">Stamp Stories</a>, gives every listing its own page and a short story, so you can browse the shelf the way you would flip through an album.</p>
+    </div>
+  </section>
+
+  <!-- ===================== WHAT WE PROMISE ===================== -->
+  <section class="block" id="promise">
+    <h2>What we promise</h2>
+    <ul class="stamps">
+      <li class="edged"><div class="card perf">
+        <h3>Exactly as shown</h3>
+        <p>Offered exactly as shown in the photos. The exact item pictured is what you'll receive, accurately described with no guesswork.</p>
+      </div></li>
+      <li class="edged"><div class="card perf">
+        <h3>Looked up, not guessed</h3>
+        <p>We identify each stamp from its Scott catalog number, checked against the catalog rather than from memory.</p>
+      </div></li>
+      <li class="edged"><div class="card perf">
+        <h3>Combine and save</h3>
+        <p>Win or buy more than one? Your shipping drops too, on every multi-item order.</p>
+      </div></li>
+      <li class="edged"><div class="card perf">
+        <h3>Safe checkout</h3>
+        <p>Every purchase happens on eBay, with eBay's buyer protection behind it.</p>
+      </div></li>
+    </ul>
+  </section>
+
+  <!-- ===================== WHAT WE SELL ===================== -->
+  <section class="block" id="sell">
+    <h2>What you'll find <a href="shop.html">Go to the shop</a></h2>
+    <ul class="rows">
+      <li>Full sheets and panes</li>
+      <li>Plate blocks and plate number singles</li>
+      <li>Classic and modern U.S. singles</li>
+      <li>Covers and postal history</li>
+      <li>Revenues and back-of-book</li>
+      <li>Postal cards and stationery</li>
+      <li>Collections, lots and album pages</li>
+      <li>Worldwide stamps, from Canada to Japan</li>
+    </ul>
+  </section>
+
+  <!-- ===================== FIND US ===================== -->
+  <section class="block" id="find">
+    <h2>Find us</h2>
+    <a class="btn" href="https://www.ebay.com/str/stampedeusa" target="stampede_ebay">Visit the eBay store</a>
+    <ul class="links">
+      <li><a href="https://www.ebay.com/usr/stampede_usa" target="stampede_ebay">eBay seller profile: stampede_usa</a></li>
+      <li><a href="https://stampedestamps.github.io/stampede-stories/index.html">Stamp Stories</a></li>
+      <li><a href="https://www.facebook.com/StampedeStamps" target="_blank">Facebook: StampedeStamps</a></li>
+      <li><a href="https://www.ebay.com/help/selling/seller-levels-performance-standards/seller-levels-performance-standards" target="_blank">What Top Rated Seller means</a></li>
+    </ul>
+  </section>
+
+</main>
+
+<!-- ===================== FOOTER (same on all 5 pages) ===================== -->
+<footer class="selvage">
+  <div class="foot">
+    <p class="sign">- StampedeUSA</p>
+    <p><a href="https://www.ebay.com/str/stampedeusa" target="stampede_ebay">Visit the StampedeUSA store on eBay</a></p>
+    <p><a href="https://stampedestamps.github.io/stampede-stories/index.html">Stamp Stories</a></p>
+    <p><a href="https://www.facebook.com/StampedeStamps" target="_blank">Facebook</a></p>
+    <p class="tags">#StampedeUSA #stamp #StampCollecting #Philately #USStamps #Stamps #Philatelist</p>
+  </div>
+</footer>
+
+</body>
+</html>
