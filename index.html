@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>StampedeUSA | U.S. and Worldwide Stamps</title>
+<meta name="description" content="StampedeUSA: U.S. classics, full sheets, covers, revenues and worldwide stamps with low starting bids. Every purchase is made safely on eBay.">
+<meta name="theme-color" content="#4B006E">
+<style>
+  /* Same look as Stamp Stories (stampedestamps.github.io/stampede-stories) */
+  @font-face {
+    font-family: "League Gothic";
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url("fonts/league-gothic-latin-400-normal.woff2") format("woff2"),
+         url("https://stampedestamps.github.io/stampede-stories/assets/fonts/league-gothic-latin-400-normal.woff2") format("woff2");
+  }
+  :root {
+    --purple: #4B006E; --lilac: #D7B8F0; --page: #F6F4FA; --grid: #E7E2EF; --paper: #FFFFFF;
+    --ink: #1F1D2B; --cancel: #B3261E; --soft: #5B566A; --link: var(--purple); --head: var(--purple);
+    --edge: rgba(75,0,110,.55); --rule: #DCD5E6;
+    --gothic: "League Gothic","Oswald","Arial Narrow",Impact,sans-serif;
+    --serif: Charter,"Bitstream Charter","Sitka Text",Cambria,Georgia,serif;
+    color-scheme: light dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --page: #1C1A22; --grid: transparent; --paper: #2A2732; --ink: #ECE8F3; --cancel: #FF8A80;
+      --soft: #B9B2C6; --link: var(--lilac); --head: var(--lilac); --edge: rgba(215,184,240,.5); --rule: #3A3644; }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+  body {
+    margin: 0; background-color: var(--page); color: var(--ink); font: 1.0625rem/1.6 var(--serif);
+    background-image: linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+    background-size: 24px 24px;
+  }
+  a { color: var(--link); text-underline-offset: .18em; text-decoration-thickness: 1px; }
+  a:hover { text-decoration-thickness: 2px; }
+  :focus-visible { outline: 3px solid var(--cancel); outline-offset: 3px; }
+  .skip { position: absolute; left: -999px; top: 0; }
+  .skip:focus { left: 1rem; top: .5rem; z-index: 9; background: var(--paper); padding: .4rem .7rem; }
+  h1, h2, h3 { font-family: var(--gothic); font-weight: 400; letter-spacing: .01em; line-height: 1.05; color: var(--head); margin: 0; }
+  main { display: block; max-width: 72rem; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+
+  /* ---------- Selvage header with the 5-page menu ---------- */
+  .selvage { background: var(--purple); color: #fff; }
+  .selvage a { color: #fff; }
+  .selvage :focus-visible { outline-color: #fff; }
+  .top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .4rem 1.5rem;
+    max-width: 72rem; margin: 0 auto; padding: .7rem 1rem; }
+  .mark { font-family: var(--gothic); font-size: 2rem; line-height: 1; text-decoration: none; letter-spacing: .02em; }
+  .mark small { font-family: var(--serif); font-size: .95rem; letter-spacing: 0; opacity: .92; margin-left: .45rem; }
+  .menu ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .2rem 1.1rem; }
+  .menu a { font-size: .98rem; text-decoration: none; padding: .15rem 0; border-bottom: 2px solid transparent; }
+  .menu a:hover { border-bottom-color: var(--lilac); }
+  .menu a[aria-current="page"] { border-bottom-color: #fff; }
+
+  /* ---------- Perforated stamp edge (same trick as Stamp Stories) ---------- */
+  .perf { position: relative; isolation: isolate; --r: 5px; }
+  .perf::before {
+    content: ""; position: absolute; inset: 0; z-index: -1; background: var(--paper);
+    -webkit-mask: radial-gradient(var(--r),#0000 96%,#000) round calc(-1.5*var(--r)) calc(-1.5*var(--r))/calc(3*var(--r)) calc(3*var(--r)),
+      linear-gradient(#000 0 0) no-repeat 50%/calc(100% - 3*var(--r)) calc(100% - 3*var(--r));
+    mask: radial-gradient(var(--r),#0000 96%,#000) round calc(-1.5*var(--r)) calc(-1.5*var(--r))/calc(3*var(--r)) calc(3*var(--r)),
+      linear-gradient(#000 0 0) no-repeat 50%/calc(100% - 3*var(--r)) calc(100% - 3*var(--r));
+  }
+  .edged { filter: drop-shadow(0 0 1px var(--edge)); }
+
+  /* ---------- Hero ---------- */
+  .hero-row { display: grid; gap: 1.5rem; align-items: center; }
+  .hero h1 { font-size: clamp(2.6rem, 9vw, 4.4rem); }
+  .hero .lede { font-size: 1.15rem; max-width: 40rem; margin: .6rem 0 1.25rem; }
+  .verse { font-style: italic; color: var(--soft); margin: 0 0 1.25rem; }
+  .hero-photo { --r: 7px; padding: 1.1rem; }
+  .hero-photo .frame { border: 2px solid var(--purple); aspect-ratio: 4 / 3; }
+
+  /* ---------- Photo slots: a dashed box shows until the photo is uploaded ---------- */
+  .slot { position: relative; overflow: hidden; }
+  .slot img { display: block; width: 100%; height: 100%; object-fit: contain; }
+  .slot.missing img { display: none; }
+  .slot.missing::after {
+    content: "Photo: " attr(data-file); position: absolute; inset: .4rem; display: flex; align-items: center;
+    justify-content: center; text-align: center; font-size: .85rem; color: var(--soft); border: 2px dashed var(--rule);
+  }
+
+  /* ---------- Category pane: a sheet of perforated stamps ---------- */
+  .pane { position: relative; background: var(--purple); padding: 14px 40px 14px 14px; display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr)); list-style: none; margin: 0; }
+  .pane li { display: flex; }
+  .tile { flex: 1; display: flex; flex-direction: column; justify-content: space-between; gap: .5rem; min-height: 7.2rem;
+    padding: 1.1rem 1.05rem 1rem; text-decoration: none; color: var(--purple); }
+  .tile b { font-family: var(--gothic); font-weight: 400; font-size: 1.65rem; line-height: 1.02; }
+  .tile span { font-size: .95rem; color: var(--soft); }
+  .tile:hover b { text-decoration: underline 2px; text-underline-offset: .12em; }
+  .tile:focus-visible { outline-offset: -9px; }
+  .pane .inscription { position: absolute; right: 0; top: 0; bottom: 0; width: 40px; display: flex; align-items: center;
+    justify-content: center; writing-mode: vertical-rl; color: #fff; font-size: .8rem; opacity: .9; margin: 0; }
+  @media (prefers-color-scheme: dark) { .tile { color: var(--lilac); } }
+
+  /* ---------- Shop facts ---------- */
+  .facts { display: flex; flex-wrap: wrap; gap: .3rem 2rem; margin: 1.4rem 0 0; color: var(--soft); font-size: .98rem; }
+  .facts b { font-family: var(--gothic); font-weight: 400; font-size: 1.5rem; color: var(--head); margin-right: .3rem; }
+
+  /* ---------- Sections ---------- */
+  .block { margin: 2.8rem 0 0; scroll-margin-top: 1rem; }
+  .block > h2 { font-size: 2.3rem; border-bottom: 2px solid var(--purple); padding-bottom: .35rem; display: flex;
+    justify-content: space-between; align-items: baseline; gap: 1rem; flex-wrap: wrap; }
+  .block > h2 a { font-family: var(--serif); font-size: 1rem; letter-spacing: 0; }
+  @media (prefers-color-scheme: dark) { .block > h2 { border-color: var(--lilac); } }
+  .note { color: var(--soft); font-size: .95rem; margin: .5rem 0 0; }
+
+  /* Newly listed: perforated stamp cards */
+  .stamps { list-style: none; padding: 0; margin: 1.1rem 0 0; display: grid; gap: 1.1rem;
+    grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); }
+  .stamps li { display: flex; }
+  .stamps a { flex: 1; display: flex; flex-direction: column; gap: .6rem; padding: 1.15rem 1.1rem 1rem; text-decoration: none; color: var(--ink); }
+  .stamps .slot { height: 10rem; }
+  .stamps .t { font-family: var(--gothic); font-size: 1.3rem; line-height: 1.1; color: var(--head); }
+  .stamps .c { font-size: .9rem; color: var(--soft); margin-top: auto; }
+  .stamps a:hover .t { text-decoration: underline 1px; }
+
+  /* Two ways to buy */
+  .ways { display: grid; gap: 1.1rem; margin: 1.1rem 0 0; }
+  .way { --r: 6px; padding: 1.6rem 1.5rem; }
+  .way .frame { border: 2px solid var(--purple); padding: 1.1rem 1.1rem .4rem; height: 100%; }
+  @media (prefers-color-scheme: dark) { .way .frame, .hero-photo .frame { border-color: var(--lilac); } }
+  .way h3 { font-size: 1.9rem; }
+  .way p { margin: .4rem 0 0; }
+  .btn { display: block; text-align: center; background: var(--purple); color: #fff; font-family: var(--gothic);
+    font-size: 1.6rem; letter-spacing: .03em; line-height: 1; padding: .9rem 1rem; margin: 1.1rem 0 .9rem;
+    text-decoration: none; border-radius: 4px; border: 2px solid var(--purple); }
+  @media (prefers-color-scheme: dark) { .btn { border-color: var(--lilac); } }
+  @media (prefers-reduced-motion: no-preference) {
+    .btn { transition: transform .08s ease-out; }
+    .btn:active { transform: translateY(1px); }
+  }
+
+  /* Regions: one ruled list, like the Stamp Stories rows */
+  .rows { list-style: none; padding: 0; margin: .4rem 0 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); column-gap: 2rem; }
+  .rows li { padding: .55rem 0; border-bottom: 1px solid var(--rule); }
+  .rows a { font-size: 1.06rem; }
+
+  /* Promise */
+  .promise { display: grid; gap: 1rem 2rem; margin: 1.1rem 0 0; }
+  .promise h3 { font-size: 1.55rem; color: var(--ink); }
+  .promise p { margin: .2rem 0 0; }
+
+  /* Footer */
+  footer.selvage { margin-top: 2rem; }
+  .foot { max-width: 72rem; margin: 0 auto; padding: 1.4rem 1rem 1.8rem; display: flex; flex-wrap: wrap; gap: .4rem 2rem; align-items: baseline; }
+  .sign { font-family: var(--gothic); font-size: 1.7rem; margin: 0; }
+  .foot p { margin: 0; }
+  .tags { flex-basis: 100%; font-size: .9rem; opacity: .85; }
+
+  @media (min-width: 44rem) {
+    .hero-row { grid-template-columns: 1.3fr 1fr; }
+    .pane { grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 16px 48px 16px 16px; }
+    .pane .inscription { width: 48px; }
+    .ways, .promise { grid-template-columns: 1fr 1fr; }
+    .promise { grid-template-columns: repeat(3, 1fr); }
+    .btn { display: inline-block; padding: .9rem 2.6rem; }
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to the stamps</a>
+
+<!-- ===================== HEADER + MENU (same on all 5 pages) ===================== -->
+<header class="selvage">
+  <div class="top">
+    <a class="mark" href="index.html">STAMPede USA<small>stamps &amp; postal history</small></a>
+    <nav class="menu" aria-label="Main menu">
+      <ul>
+        <li><a href="index.html" aria-current="page">Home</a></li>
+        <li><a href="shop.html">Shop</a></li>
+        <li><a href="sale.html">Sale</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="feedback.html">Feedback</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- ===================== HERO ===================== -->
+  <section class="hero">
+    <div class="hero-row">
+      <div>
+        <h1>From U.S. classics to worldwide flair.</h1>
+        <p class="lede">Sheets and panes, singles, covers, revenues and a few travelers from abroad, all with low starting bids. Pick a category below, or head straight to the shop.</p>
+        <p class="verse">Combine wins, shipping drops too,<br>follow us &mdash; fresh finds for you!</p>
+        <a class="btn" href="https://www.ebay.com/str/stampedeusa" target="stampede_ebay">Shop the eBay store</a>
+      </div>
+      <div class="hero-photo perf edged">
+        <div class="frame slot" data-file="images/hero.jpg">
+          <img src="images/hero.jpg" alt="A selection of StampedeUSA stamps, sheets and covers" onerror="this.parentElement.classList.add('missing')">
+        </div>
+      </div>
+    </div>
+
+    <p class="facts"><span><b>100%</b>positive feedback</span><span><b>248+</b>items sold</span><span><b>Combined</b>shipping on multiple wins</span></p>
+  </section>
+
+  <!-- ===================== FEATURED CATEGORIES (the stamp sheet) ===================== -->
+  <section class="block" id="categories">
+    <h2>Featured categories <a href="shop.html">Browse everything</a></h2>
+    <nav aria-label="Featured categories" style="margin-top:1.1rem">
+      <ul class="pane">
+        <li><a class="tile perf" href="https://www.ebay.com/str/stampedeusa?_nkw=revenue" target="stampede_ebay"><b>Back of Book</b><span>Revenues, fees and more</span></a></li>
+        <li><a class="tile perf" href="https://www.ebay.com/str/stampedeusa?_nkw=sheet" target="stampede_ebay"><b>Sheets</b><span>Full sheets and panes</span></a></li>
+        <li><a class="tile perf" href="https://www.ebay.com/str/stampedeusa/United-States/_i.html" target="stampede_ebay"><b>United States</b><span>Classics to modern</span></a></li>
+        <li><a class="tile perf" href="https://www.ebay.com/str/stampedeusa?_nkw=cover" target="stampede_ebay"><b>Covers</b><span>Postal history</span></a></li>
+        <li><a class="tile perf" href="https://www.ebay.com/str/stampedeusa?_nkw=united+nations" target="stampede_ebay"><b>United Nations</b><span>New York, Geneva, Vienna</span></a></li>
+        <li><a class="tile perf" href="https://www.ebay.com/str/stampedeusa/Europe/_i.html" target="stampede_ebay"><b>Europe</b><span>Old World favorites</span></a></li>
+        <li class="inscription" aria-hidden="true">Low starting bids</li>
+      </ul>
+    </nav>
+  </section>
+
+  <!-- ===================== NEWLY LISTED (swap these six when you list new items) ===================== -->
+  <section class="block" id="new">
+    <h2>Newly listed <a href="https://www.ebay.com/str/stampedeusa" target="stampede_ebay">See all on eBay</a></h2>
+    <ul class="stamps">
+      <li class="edged"><a class="perf" href="https://www.ebay.com/itm/168759699120" target="stampede_ebay">
+        <span class="slot" data-file="images/new-1.jpg"><img src="images/new-1.jpg" alt="Scott 803-831 1938 Presidential Prexie set" onerror="this.parentElement.classList.add('missing')"></span>
+        <span class="t">Scott #803-831 1938 Presidential Prexie Set of 29 MNH 1/2c-50c 3 Plate Numbers</span><span class="c">United States</span></a></li>
+      <li class="edged"><a class="perf" href="https://www.ebay.com/itm/168759699121" target="stampede_ebay">
+        <span class="slot" data-file="images/new-2.jpg"><img src="images/new-2.jpg" alt="Scott 1842 1980 Christmas Madonna and Child full sheet" onerror="this.parentElement.classList.add('missing')"></span>
+        <span class="t">Scott #1842 1980 Christmas Madonna and Child 15c Full Sheet of 50 Plate Numbers</span><span class="c">Sheets</span></a></li>
+      <li class="edged"><a class="perf" href="https://www.ebay.com/itm/168759699122" target="stampede_ebay">
+        <span class="slot" data-file="images/new-3.jpg"><img src="images/new-3.jpg" alt="1932-35 US collection on album pages" onerror="this.parentElement.classList.add('missing')"></span>
+        <span class="t">1932-35 US Collection 6 Album Pages 39 Stamps Washington Bicentennial Byrd Sheet</span><span class="c">Collections, Lots</span></a></li>
+      <li class="edged"><a class="perf" href="https://www.ebay.com/itm/168759567883" target="stampede_ebay">
+        <span class="slot" data-file="images/new-4.jpg"><img src="images/new-4.jpg" alt="Japan Scott 479 Moon and Geese" onerror="this.parentElement.classList.add('missing')"></span>
+        <span class="t">Japan Scott #479 (MH) 1949 8y Moon and Geese Hiroshige Philatelic Week Purple</span><span class="c">Asia</span></a></li>
+      <li class="edged"><a class="perf" href="https://www.ebay.com/itm/168759547000" target="stampede_ebay">
+        <span class="slot" data-file="images/new-5.jpg"><img src="images/new-5.jpg" alt="Classic Europe lot of 5 stamps" onerror="this.parentElement.classList.add('missing')"></span>
+        <span class="t">Classic Europe Lot of 5 Netherlands Scott J2 21 49 Spain 1878 Denmark 100 Ore</span><span class="c">Europe</span></a></li>
+      <li class="edged"><a class="perf" href="https://www.ebay.com/itm/168759530334" target="stampede_ebay">
+        <span class="slot" data-file="images/new-6.jpg"><img src="images/new-6.jpg" alt="2012 Innovative Choreographers pane of 20" onerror="this.parentElement.classList.add('missing')"></span>
+        <span class="t">2012 Innovative Choreographers (MNH) Pane of 20 Duncan Limon Dunham Fosse</span><span class="c">Sheets</span></a></li>
+    </ul>
+    <p class="note">Prices, bids and time left are always current on eBay.</p>
+  </section>
+
+  <!-- ===================== TWO WAYS TO BUY ===================== -->
+  <section class="block" id="buy">
+    <h2>Two ways to buy</h2>
+    <div class="ways">
+      <div class="way perf edged"><div class="frame">
+        <h3>Auctions</h3>
+        <p>Low starting bids on sheets, panes, plate blocks, revenues and covers. New auctions start every week.</p>
+        <a class="btn" href="https://www.ebay.com/str/stampedeusa?LH_Auction=1" target="stampede_ebay">See the auctions</a>
+      </div></div>
+      <div class="way perf edged"><div class="frame">
+        <h3>Buy It Now</h3>
+        <p>Found the one you want? Skip the wait and make it yours today, with combined shipping on multiple items.</p>
+        <a class="btn" href="https://www.ebay.com/str/stampedeusa?LH_BIN=1" target="stampede_ebay">Shop Buy It Now</a>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- ===================== SHOP BY REGION ===================== -->
+  <section class="block" id="regions">
+    <h2>Shop by region</h2>
+    <ul class="rows">
+      <li><a href="https://www.ebay.com/str/stampedeusa/United-States/_i.html" target="stampede_ebay">United States</a></li>
+      <li><a href="https://www.ebay.com/str/stampedeusa/Canada/_i.html" target="stampede_ebay">Canada</a></li>
+      <li><a href="https://www.ebay.com/str/stampedeusa/Great-Britain/_i.html" target="stampede_ebay">Great Britain</a></li>
+      <li><a href="https://www.ebay.com/str/stampedeusa/British-Colonies-Territories/_i.html" target="stampede_ebay">British Colonies &amp; Territories</a></li>
+      <li><a href="https://www.ebay.com/str/stampedeusa/Europe/_i.html" target="stampede_ebay">Europe</a></li>
+      <li><a href="https://www.ebay.com/str/stampedeusa/Asia/_i.html" target="stampede_ebay">Asia</a></li>
+      <li><a href="https://www.ebay.com/str/stampedeusa/Latin-America/_i.html" target="stampede_ebay">Latin America</a></li>
+      <li><a href="https://www.ebay.com/str/stampedeusa/Africa/_i.html" target="stampede_ebay">Africa</a></li>
+      <li><a href="https://www.ebay.com/str/stampedeusa/Worldwide/_i.html" target="stampede_ebay">Worldwide</a></li>
+      <li><a href="https://www.ebay.com/str/stampedeusa/Entertainment-Memorabilia/_i.html" target="stampede_ebay">Entertainment Memorabilia</a></li>
+    </ul>
+  </section>
+
+  <!-- ===================== OUR PROMISE ===================== -->
+  <section class="block" id="promise">
+    <h2>Our promise</h2>
+    <div class="promise">
+      <div><h3>Exactly as shown</h3><p>Every listing shows the exact item you will receive, accurately described with no guesswork.</p></div>
+      <div><h3>Combine and save</h3><p>Win more than one? Your shipping drops too, on every multi-item order.</p></div>
+      <div><h3>Fresh finds weekly</h3><p>New stamps, sheets and covers every week. Follow the eBay store so you never miss one.</p></div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ===================== FOOTER (same on all 5 pages) ===================== -->
+<footer class="selvage">
+  <div class="foot">
+    <p class="sign">- StampedeUSA</p>
+    <p><a href="https://www.ebay.com/str/stampedeusa" target="stampede_ebay">Visit the StampedeUSA store on eBay</a></p>
+    <p><a href="https://stampedestamps.github.io/stampede-stories/index.html">Stamp Stories</a></p>
+    <p><a href="https://www.facebook.com/StampedeStamps" target="_blank">Facebook</a></p>
+    <p class="tags">#StampedeUSA #stamp #StampCollecting #Philately #USStamps #Stamps #Philatelist</p>
+  </div>
+</footer>
+
+</body>
+</html>
