@@ -254,46 +254,49 @@
     </div>
   </section>
 
-  <!-- ===================== COLLECTOR CATEGORIES (links into Stamp Stories, rebuilt every morning) ===================== -->
+  <!-- ===================== COLLECTOR CATEGORIES (opens our own catalog, filtered; the list is rewritten by build.py every morning) ===================== -->
   <section class="block" id="collector">
-    <h2>Browse by collector category <a href="https://stampedestamps.github.io/stampede-stories/index.html">Open Stamp Stories</a></h2>
-    <p class="note">Our Stamp Stories site lists every item one page at a time, with a short story about each, sorted the way collectors look for stamps.</p>
+    <h2>Browse by collector category <a href="catalog/">Open the full catalog</a></h2>
+    <p class="note">Every listing in our catalog, sorted the way collectors look for stamps. Pick a category to see just those stamps; each one opens on eBay.</p>
     <ul class="rows">
-      <li><a href="https://stampedestamps.github.io/stampede-stories/index.html#cat-sheets">Sheets</a></li>
-      <li><a href="https://stampedestamps.github.io/stampede-stories/index.html#cat-revenues">Revenues</a></li>
-      <li><a href="https://stampedestamps.github.io/stampede-stories/index.html#cat-postal-history">Postal History</a></li>
-      <li><a href="https://stampedestamps.github.io/stampede-stories/index.html#cat-covers">Covers</a></li>
-      <li><a href="https://stampedestamps.github.io/stampede-stories/index.html#cat-first-flight">First Flight</a></li>
-      <li><a href="https://stampedestamps.github.io/stampede-stories/index.html#cat-air-mail">Air Mail</a></li>
-      <li><a href="https://stampedestamps.github.io/stampede-stories/index.html#cat-other-us-event-stamp-covers">Event Covers</a></li>
-      <li><a href="https://stampedestamps.github.io/stampede-stories/index.html#cat-19th-century-unused">19th Century: Unused</a></li>
-      <li><a href="https://stampedestamps.github.io/stampede-stories/index.html#cat-19th-century-used">19th Century: Used</a></li>
-      <li><a href="https://stampedestamps.github.io/stampede-stories/index.html#cat-pre-1930">Pre-1930</a></li>
-      <li><a href="https://stampedestamps.github.io/stampede-stories/index.html#cat-1901-40-unused">1901-40: Unused</a></li>
-      <li><a href="https://stampedestamps.github.io/stampede-stories/index.html#cat-1901-now-used">1901-Now: Used</a></li>
-      <li><a href="https://stampedestamps.github.io/stampede-stories/index.html#cat-duck-stamps">Duck Stamps</a></li>
-      <li><a href="https://stampedestamps.github.io/stampede-stories/index.html#cat-other-us-back-of-book-stamps">Back of Book</a></li>
-      <li><a href="https://stampedestamps.github.io/stampede-stories/index.html#cat-postal-cards-stationery">Postal Cards &amp; Stationery</a></li>
-      <li><a href="https://stampedestamps.github.io/stampede-stories/index.html#cat-booklets">Booklets</a></li>
-      <li><a href="https://stampedestamps.github.io/stampede-stories/index.html#cat-possessions">U.S. Possessions</a></li>
-      <li><a href="https://stampedestamps.github.io/stampede-stories/index.html#cat-collections-lots">Collections &amp; Lots</a></li>
-      <li><a href="https://stampedestamps.github.io/stampede-stories/index.html#cat-jazz-big-band">Jazz &amp; Big Band</a></li>
-      <li><a href="https://stampedestamps.github.io/stampede-stories/index.html#cat-united-nations">United Nations</a></li>
-      <li><a href="https://stampedestamps.github.io/stampede-stories/index.html#cat-victoria">Victoria (Great Britain)</a></li>
-      <li><a href="https://stampedestamps.github.io/stampede-stories/index.html#cat-germany-colonies">Germany &amp; Colonies</a></li>
-      <li><a href="https://stampedestamps.github.io/stampede-stories/index.html#cat-france-colonies">France &amp; Colonies</a></li>
-      <li><a href="https://stampedestamps.github.io/stampede-stories/index.html#cat-italy">Italy</a></li>
-      <li><a href="https://stampedestamps.github.io/stampede-stories/index.html#cat-vatican">Vatican</a></li>
-      <li><a href="https://stampedestamps.github.io/stampede-stories/index.html#cat-switzerland">Switzerland</a></li>
-      <li><a href="https://stampedestamps.github.io/stampede-stories/index.html#cat-liechtenstein">Liechtenstein</a></li>
-      <li><a href="https://stampedestamps.github.io/stampede-stories/index.html#cat-norway">Norway</a></li>
-      <li><a href="https://stampedestamps.github.io/stampede-stories/index.html#cat-ukraine">Ukraine</a></li>
-      <li><a href="https://stampedestamps.github.io/stampede-stories/index.html#cat-japan">Japan</a></li>
-      <li><a href="https://stampedestamps.github.io/stampede-stories/index.html#cat-china">China</a></li>
-      <li><a href="https://stampedestamps.github.io/stampede-stories/index.html#cat-india-until-1947">India (until 1947)</a></li>
-      <li><a href="https://stampedestamps.github.io/stampede-stories/index.html#cat-philippines">Philippines</a></li>
-      <li><a href="https://stampedestamps.github.io/stampede-stories/index.html#cat-panama">Panama</a></li>
-      <li><a href="https://stampedestamps.github.io/stampede-stories/index.html#cat-tanzania">Tanzania</a></li>
+      <!-- CATALOG-CATEGORIES:START (written by build.py from data/listings.csv - do not edit by hand) -->
+      <li><a href="catalog/?cat=sheets">Sheets</a></li>
+      <li><a href="catalog/?cat=revenues">Revenues</a></li>
+      <li><a href="catalog/?cat=1901-40-unused">1901-40: Unused</a></li>
+      <li><a href="catalog/?cat=postal-history">Postal History</a></li>
+      <li><a href="catalog/?cat=19th-century-unused">19th Century: Unused</a></li>
+      <li><a href="catalog/?cat=19th-century-used">19th Century: Used</a></li>
+      <li><a href="catalog/?cat=collections-lots">Collections &amp; Lots</a></li>
+      <li><a href="catalog/?cat=other-us-event-stamp-covers">Event Covers</a></li>
+      <li><a href="catalog/?cat=first-flight">First Flight</a></li>
+      <li><a href="catalog/?cat=air-mail">Air Mail</a></li>
+      <li><a href="catalog/?cat=germany-colonies">Germany &amp; Colonies</a></li>
+      <li><a href="catalog/?cat=japan">Japan</a></li>
+      <li><a href="catalog/?cat=victoria">Victoria (Great Britain)</a></li>
+      <li><a href="catalog/?cat=norway">Norway</a></li>
+      <li><a href="catalog/?cat=possessions">U.S. Possessions</a></li>
+      <li><a href="catalog/?cat=1901-now-used">1901-Now: Used</a></li>
+      <li><a href="catalog/?cat=duck-stamps">Duck Stamps</a></li>
+      <li><a href="catalog/?cat=other-us-back-of-book-stamps">Back of Book</a></li>
+      <li><a href="catalog/?cat=postal-cards-stationery">Postal Cards &amp; Stationery</a></li>
+      <li><a href="catalog/?cat=switzerland">Switzerland</a></li>
+      <li><a href="catalog/?cat=booklets">Booklets</a></li>
+      <li><a href="catalog/?cat=china">China</a></li>
+      <li><a href="catalog/?cat=covers">Covers</a></li>
+      <li><a href="catalog/?cat=france-colonies">France &amp; Colonies</a></li>
+      <li><a href="catalog/?cat=india-until-1947">India (until 1947)</a></li>
+      <li><a href="catalog/?cat=italy">Italy</a></li>
+      <li><a href="catalog/?cat=jazz-big-band">Jazz &amp; Big Band</a></li>
+      <li><a href="catalog/?cat=liechtenstein">Liechtenstein</a></li>
+      <li><a href="catalog/?cat=other-us-stamp-covers">Other U.S. Covers</a></li>
+      <li><a href="catalog/?cat=panama">Panama</a></li>
+      <li><a href="catalog/?cat=philippines">Philippines</a></li>
+      <li><a href="catalog/?cat=pre-1930">Pre-1930</a></li>
+      <li><a href="catalog/?cat=tanzania">Tanzania</a></li>
+      <li><a href="catalog/?cat=ukraine">Ukraine</a></li>
+      <li><a href="catalog/?cat=united-nations">United Nations</a></li>
+      <li><a href="catalog/?cat=vatican">Vatican</a></li>
+      <!-- CATALOG-CATEGORIES:END -->
     </ul>
   </section>
 
@@ -301,7 +304,7 @@
   <section class="block" id="how">
     <h2>How buying works</h2>
     <ol class="steps">
-      <li><div><h3>Pick a stamp</h3><p>Every link on this site opens the listing on eBay, with full photos and the current price or bid.</p></div></li>
+      <li><div><h3>Pick a stamp</h3><p>Every stamp on this site leads to its eBay listing, with full photos and the current price or bid.</p></div></li>
       <li><div><h3>Bid or buy on eBay</h3><p>Checkout happens on eBay, so your purchase has eBay's buyer protection behind it.</p></div></li>
       <li><div><h3>Combine and save</h3><p>Win more than one? Your shipping drops too. Combined shipping on every multi-item order.</p></div></li>
     </ol>

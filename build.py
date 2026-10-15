@@ -224,6 +224,34 @@ def build_item(r, rows_by_cat, imgs):
     return out
 
 
+# Friendlier names on the Shop page for a few eBay category names (the catalog's own filter keeps eBay's names).
+FRIENDLY = {"Other US Event Stamp Covers": "Event Covers", "Other US Back of Book Stamps": "Back of Book",
+            "Other US Stamp Covers": "Other U.S. Covers", "Possessions": "U.S. Possessions",
+            "Victoria": "Victoria (Great Britain)", "Collections, Lots": "Collections & Lots"}
+SHOP_START, SHOP_END = "<!-- CATALOG-CATEGORIES:START", "<!-- CATALOG-CATEGORIES:END -->"
+
+
+def update_shop(rows):
+    """Rewrite the Shop page's collector-category list (between the two markers) from today's listings, so every
+    link opens a non-empty catalog filter. Only that block changes; returns the number of categories written."""
+    path = os.path.join(HERE, "shop.html")
+    with open(path, encoding="utf-8", newline="") as f:
+        text = f.read()
+    a, b = text.index(SHOP_START), text.index(SHOP_END)
+    head_end = text.index("-->", a) + 3
+    cats = {}
+    for r in rows:
+        cats[r["category"]] = cats.get(r["category"], 0) + 1
+    nl = "\r\n" if "\r\n" in text[:500] else "\n"
+    items = "".join(f'{nl}      <li><a href="catalog/?cat={esc(slug(k))}">{esc(FRIENDLY.get(k, k))}</a></li>'
+                    for k, _ in sorted(cats.items(), key=lambda kv: (-kv[1], kv[0])))
+    new = text[:head_end] + items + nl + "      " + text[b:]
+    if new != text:
+        with open(path, "w", encoding="utf-8", newline="") as f:
+            f.write(new)
+    return len(cats)
+
+
 def write(path, text):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", encoding="utf-8", newline="\n") as f:
@@ -248,7 +276,9 @@ def main():
     sm += "".join(f"  <url><loc>{esc(u)}</loc><lastmod>{lastmod}</lastmod></url>\n" for u in urls) + "</urlset>\n"
     write(os.path.join(HERE, "sitemap.xml"), sm)
     write(os.path.join(HERE, "robots.txt"), f"User-agent: *\nAllow: /\nSitemap: {SITE}/sitemap.xml\n")
-    print(f"built {len(rows)} item pages + catalog index ({len(imgs)} with photos), sitemap {len(urls)} urls, as of {lastmod}")
+    ncat = update_shop(rows)
+    print(f"built {len(rows)} item pages + catalog index ({len(imgs)} with photos), sitemap {len(urls)} urls, "
+          f"shop categories {ncat}, as of {lastmod}")
 
 
 if __name__ == "__main__":

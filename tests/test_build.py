@@ -81,6 +81,19 @@ class BuildTests(unittest.TestCase):
         build()
         self.assertEqual(first, tree_hash())
 
+    def test_shop_category_links_open_nonempty_filters(self):
+        shop = open(os.path.join(ROOT, "shop.html"), encoding="utf-8").read()
+        block = shop[shop.index("<!-- CATALOG-CATEGORIES:START"):shop.index("<!-- CATALOG-CATEGORIES:END -->")]
+        cats = re.findall(r'href="catalog/\?cat=([a-z0-9-]+)"', block)
+        index = open(os.path.join(ROOT, "catalog", "index.html"), encoding="utf-8").read()
+        live = set(re.findall(r'data-c="([a-z0-9-]+)"', index))
+        self.assertTrue(cats, "no category links in the Shop block")
+        self.assertEqual(len(cats), len(set(cats)), "duplicate category link")
+        for c in cats:
+            self.assertIn(c, live, f"Shop links to an empty category: {c}")
+        self.assertEqual(set(cats), live, "Shop list and catalog categories differ")
+        self.assertNotIn("stampede-stories", block)
+
     def test_sitemap_lists_every_item(self):
         sm = open(os.path.join(ROOT, "sitemap.xml"), encoding="utf-8").read()
         for r in self.rows:
