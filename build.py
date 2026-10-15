@@ -252,6 +252,40 @@ def update_shop(rows):
     return len(cats)
 
 
+NEW_START, NEW_END, NEW_COUNT = "<!-- NEWLY-LISTED:START", "<!-- NEWLY-LISTED:END -->", 6
+
+
+def replace_block(path, start, end, items):
+    """Swap the text between two marker comments in a hand-written page; only that block changes."""
+    with open(path, encoding="utf-8", newline="") as f:
+        text = f.read()
+    a, b = text.index(start), text.index(end)
+    head_end = text.index("-->", a) + 3
+    nl = "\r\n" if "\r\n" in text[:500] else "\n"
+    new = text[:head_end] + "".join(nl + "      " + i for i in items) + nl + "      " + text[b:]
+    if new != text:
+        with open(path, "w", encoding="utf-8", newline="") as f:
+            f.write(new)
+
+
+def update_home(rows, imgs):
+    """Home's "Newly listed": the 6 newest listings (highest item number) that have a photo, one per title, each
+    linking to its catalog page. Returns the item numbers chosen."""
+    picked, titles = [], set()
+    for r in sorted(rows, key=lambda r: r["item"], reverse=True):
+        if r["item"] in imgs and r["title"] not in titles:
+            picked.append(r)
+            titles.add(r["title"])
+        if len(picked) == NEW_COUNT:
+            break
+    items = [f'<li class="edged"><a class="perf" href="catalog/item/{esc(r["item"])}.html">'
+             f'<span class="slot"><img src="{esc(imgs[r["item"]])}" alt="{esc(r["title"])}" loading="lazy"></span>'
+             f'<span class="t">{esc(r["title"])}</span><span class="c">{esc(FRIENDLY.get(r["category"], r["category"]))}</span></a></li>'
+             for r in picked]
+    replace_block(os.path.join(HERE, "index.html"), NEW_START, NEW_END, items)
+    return [r["item"] for r in picked]
+
+
 def write(path, text):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", encoding="utf-8", newline="\n") as f:
@@ -277,8 +311,9 @@ def main():
     write(os.path.join(HERE, "sitemap.xml"), sm)
     write(os.path.join(HERE, "robots.txt"), f"User-agent: *\nAllow: /\nSitemap: {SITE}/sitemap.xml\n")
     ncat = update_shop(rows)
+    newest = update_home(rows, imgs)
     print(f"built {len(rows)} item pages + catalog index ({len(imgs)} with photos), sitemap {len(urls)} urls, "
-          f"shop categories {ncat}, as of {lastmod}")
+          f"shop categories {ncat}, home newly listed {len(newest)}, as of {lastmod}")
 
 
 if __name__ == "__main__":

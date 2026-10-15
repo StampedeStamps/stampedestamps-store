@@ -119,6 +119,8 @@
   .stamps li { display: flex; }
   .stamps a { flex: 1; display: flex; flex-direction: column; gap: .6rem; padding: 1.15rem 1.1rem 1rem; text-decoration: none; color: var(--ink); }
   .stamps .slot { height: 10rem; }
+  /* Six newly listed cards: two rows of three on wider screens (five-across left one card alone) */
+  @media (min-width: 44rem) { #new .stamps { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
   .stamps .t { font-family: var(--gothic); font-size: 1.3rem; line-height: 1.1; color: var(--head); }
   .stamps .c { font-size: .9rem; color: var(--soft); margin-top: auto; }
   .stamps a:hover .t { text-decoration: underline 1px; }
@@ -222,28 +224,18 @@
     </nav>
   </section>
 
-  <!-- ===================== NEWLY LISTED (swap these six when you list new items) ===================== -->
+  <!-- ===================== NEWLY LISTED (the six cards are rewritten by build.py every morning) ===================== -->
   <section class="block" id="new">
     <h2>Newly listed <a href="https://www.ebay.com/str/stampedeusa" target="stampede_ebay">See all on eBay</a></h2>
     <ul class="stamps">
-      <li class="edged"><a class="perf" href="https://www.ebay.com/itm/168759699120" target="stampede_ebay">
-        <span class="slot" data-file="images/new-1.jpg"><img src="images/new-1.jpg" alt="Scott 803-831 1938 Presidential Prexie set" onerror="this.parentElement.classList.add('missing')"></span>
-        <span class="t">Scott #803-831 1938 Presidential Prexie Set of 29 MNH 1/2c-50c 3 Plate Numbers</span><span class="c">United States</span></a></li>
-      <li class="edged"><a class="perf" href="https://www.ebay.com/itm/168759699121" target="stampede_ebay">
-        <span class="slot" data-file="images/new-2.jpg"><img src="images/new-2.jpg" alt="Scott 1842 1980 Christmas Madonna and Child full sheet" onerror="this.parentElement.classList.add('missing')"></span>
-        <span class="t">Scott #1842 1980 Christmas Madonna and Child 15c Full Sheet of 50 Plate Numbers</span><span class="c">Sheets</span></a></li>
-      <li class="edged"><a class="perf" href="https://www.ebay.com/itm/168759699122" target="stampede_ebay">
-        <span class="slot" data-file="images/new-3.jpg"><img src="images/new-3.jpg" alt="1932-35 US collection on album pages" onerror="this.parentElement.classList.add('missing')"></span>
-        <span class="t">1932-35 US Collection 6 Album Pages 39 Stamps Washington Bicentennial Byrd Sheet</span><span class="c">Collections, Lots</span></a></li>
-      <li class="edged"><a class="perf" href="https://www.ebay.com/itm/168759567883" target="stampede_ebay">
-        <span class="slot" data-file="images/new-4.jpg"><img src="images/new-4.jpg" alt="Japan Scott 479 Moon and Geese" onerror="this.parentElement.classList.add('missing')"></span>
-        <span class="t">Japan Scott #479 (MH) 1949 8y Moon and Geese Hiroshige Philatelic Week Purple</span><span class="c">Asia</span></a></li>
-      <li class="edged"><a class="perf" href="https://www.ebay.com/itm/168759547000" target="stampede_ebay">
-        <span class="slot" data-file="images/new-5.jpg"><img src="images/new-5.jpg" alt="Classic Europe lot of 5 stamps" onerror="this.parentElement.classList.add('missing')"></span>
-        <span class="t">Classic Europe Lot of 5 Netherlands Scott J2 21 49 Spain 1878 Denmark 100 Ore</span><span class="c">Europe</span></a></li>
-      <li class="edged"><a class="perf" href="https://www.ebay.com/itm/168759530334" target="stampede_ebay">
-        <span class="slot" data-file="images/new-6.jpg"><img src="images/new-6.jpg" alt="2012 Innovative Choreographers pane of 20" onerror="this.parentElement.classList.add('missing')"></span>
-        <span class="t">2012 Innovative Choreographers (MNH) Pane of 20 Duncan Limon Dunham Fosse</span><span class="c">Sheets</span></a></li>
+      <!-- NEWLY-LISTED:START (written by build.py: the 6 newest listings that have a photo - do not edit by hand) -->
+      <li class="edged"><a class="perf" href="catalog/item/168784118278.html"><span class="slot"><img src="images/catalog/168784118278.jpg" alt="Scott #C10 (Used) 1928 Last Day Old Air Mail Rate Cover St Louis Chicago" loading="lazy"></span><span class="t">Scott #C10 (Used) 1928 Last Day Old Air Mail Rate Cover St Louis Chicago</span><span class="c">Event Covers</span></a></li>
+      <li class="edged"><a class="perf" href="catalog/item/168784118258.html"><span class="slot"><img src="images/catalog/168784118258.jpg" alt="Scott #648 (MH) 1928 5c Hawaii Sesquicentennial Single" loading="lazy"></span><span class="t">Scott #648 (MH) 1928 5c Hawaii Sesquicentennial Single</span><span class="c">1901-40: Unused</span></a></li>
+      <li class="edged"><a class="perf" href="catalog/item/168784118254.html"><span class="slot"><img src="images/catalog/168784118254.jpg" alt="Scott #623 (MH) 1925 17c Woodrow Wilson Single" loading="lazy"></span><span class="t">Scott #623 (MH) 1925 17c Woodrow Wilson Single</span><span class="c">1901-40: Unused</span></a></li>
+      <li class="edged"><a class="perf" href="catalog/item/168784118237.html"><span class="slot"><img src="images/catalog/168784118237.jpg" alt="Scott #C10 (Used) 1928 CAM 1 Airplane Motorcycle Courier Cover Westfield" loading="lazy"></span><span class="t">Scott #C10 (Used) 1928 CAM 1 Airplane Motorcycle Courier Cover Westfield</span><span class="c">First Flight</span></a></li>
+      <li class="edged"><a class="perf" href="catalog/item/168784118233.html"><span class="slot"><img src="images/catalog/168784118233.jpg" alt="Scott #C10 (Used) 1927 Lindbergh First Day Covers Little Falls MN Lot of 2" loading="lazy"></span><span class="t">Scott #C10 (Used) 1927 Lindbergh First Day Covers Little Falls MN Lot of 2</span><span class="c">Pre-1930</span></a></li>
+      <li class="edged"><a class="perf" href="catalog/item/168784118228.html"><span class="slot"><img src="images/catalog/168784118228.jpg" alt="Scott #634 (MNH) 1926 2c George Washington Single" loading="lazy"></span><span class="t">Scott #634 (MNH) 1926 2c George Washington Single</span><span class="c">1901-40: Unused</span></a></li>
+      <!-- NEWLY-LISTED:END -->
     </ul>
     <p class="note">Prices, bids and time left are always current on eBay.</p>
     <a class="btn" href="catalog/">Browse the full catalog</a>
