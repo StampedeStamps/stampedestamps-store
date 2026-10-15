@@ -1,0 +1,129 @@
+/* Catalog pages for www.stampedestamps.store - the same look as the five hand-written pages and Stamp Stories.
+   Generated pages link this one file instead of carrying the CSS 420 times. */
+@font-face {
+  font-family: "League Gothic";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/league-gothic-latin-400-normal.woff2") format("woff2");
+}
+:root {
+  --purple: #4B006E; --lilac: #D7B8F0; --page: #F6F4FA; --grid: #E7E2EF; --paper: #FFFFFF;
+  --ink: #1F1D2B; --cancel: #B3261E; --soft: #5B566A; --link: var(--purple); --head: var(--purple);
+  --edge: rgba(75,0,110,.55); --rule: #DCD5E6;
+  --gothic: "League Gothic","Oswald","Arial Narrow",Impact,sans-serif;
+  --serif: Charter,"Bitstream Charter","Sitka Text",Cambria,Georgia,serif;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --page: #1C1A22; --grid: transparent; --paper: #2A2732; --ink: #ECE8F3; --cancel: #FF8A80;
+    --soft: #B9B2C6; --link: var(--lilac); --head: var(--lilac); --edge: rgba(215,184,240,.5); --rule: #3A3644; }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body {
+  margin: 0; background-color: var(--page); color: var(--ink); font: 1.0625rem/1.6 var(--serif);
+  background-image: linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size: 24px 24px;
+}
+a { color: var(--link); text-underline-offset: .18em; text-decoration-thickness: 1px; }
+a:hover { text-decoration-thickness: 2px; }
+:focus-visible { outline: 3px solid var(--cancel); outline-offset: 3px; }
+.skip { position: absolute; left: -999px; top: 0; }
+.skip:focus { left: 1rem; top: .5rem; z-index: 9; background: var(--paper); padding: .4rem .7rem; }
+h1, h2, h3 { font-family: var(--gothic); font-weight: 400; letter-spacing: .01em; line-height: 1.05; color: var(--head); margin: 0; }
+main { display: block; max-width: 72rem; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+
+/* Selvage header with the 5-page menu */
+.selvage { background: var(--purple); color: #fff; }
+.selvage a { color: #fff; }
+.selvage :focus-visible { outline-color: #fff; }
+.top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .4rem 1.5rem;
+  max-width: 72rem; margin: 0 auto; padding: .7rem 1rem; }
+.mark { font-family: var(--gothic); font-size: 2rem; line-height: 1; text-decoration: none; letter-spacing: .02em; }
+.mark small { font-family: var(--serif); font-size: .95rem; letter-spacing: 0; opacity: .92; margin-left: .45rem; }
+.menu ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .2rem 1.1rem; }
+.menu a { font-size: .98rem; text-decoration: none; padding: .15rem 0; border-bottom: 2px solid transparent; }
+.menu a:hover { border-bottom-color: var(--lilac); }
+.menu a[aria-current="page"] { border-bottom-color: #fff; }
+
+/* Perforated stamp edge */
+.perf { position: relative; isolation: isolate; --r: 5px; }
+.perf::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; background: var(--paper);
+  -webkit-mask: radial-gradient(var(--r),#0000 96%,#000) round calc(-1.5*var(--r)) calc(-1.5*var(--r))/calc(3*var(--r)) calc(3*var(--r)),
+    linear-gradient(#000 0 0) no-repeat 50%/calc(100% - 3*var(--r)) calc(100% - 3*var(--r));
+  mask: radial-gradient(var(--r),#0000 96%,#000) round calc(-1.5*var(--r)) calc(-1.5*var(--r))/calc(3*var(--r)) calc(3*var(--r)),
+    linear-gradient(#000 0 0) no-repeat 50%/calc(100% - 3*var(--r)) calc(100% - 3*var(--r));
+}
+.edged { filter: drop-shadow(0 0 1px var(--edge)); }
+
+/* Catalog index */
+.hero h1 { font-size: clamp(2.6rem, 9vw, 4.4rem); }
+.hero .lede { font-size: 1.15rem; max-width: 44rem; margin: .6rem 0 1rem; }
+.asof { color: var(--soft); font-size: .95rem; margin: 0; }
+.find { margin: 1.4rem 0 .4rem; display: grid; gap: .7rem; grid-template-columns: 1fr; }
+.find label { display: block; font-family: var(--gothic); font-size: 1.35rem; color: var(--head); }
+.find input, .find select { width: 100%; font: inherit; font-size: 1.05rem; padding: .65rem .8rem; color: var(--ink);
+  background: var(--paper); border: 2px solid var(--purple); border-radius: 3px; }
+@media (prefers-color-scheme: dark) { .find input, .find select { border-color: var(--lilac); } }
+.count { margin: .4rem 0 0; color: var(--soft); font-size: .95rem; }
+.empty { background: var(--paper); border-left: 4px solid var(--purple); padding: 1rem 1.1rem; margin: 1rem 0; }
+.empty p { margin: .2rem 0; }
+.empty button { font: inherit; color: var(--link); background: none; border: 0; padding: 0; text-decoration: underline; cursor: pointer; }
+.stamps { list-style: none; padding: 0; margin: 1.2rem 0 0; display: grid; gap: 1.1rem; grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); }
+.stamps li { display: flex; }
+.stamps li[hidden] { display: none; }
+.stamps .card { flex: 1; display: flex; flex-direction: column; gap: .55rem; padding: 1.15rem 1.1rem 1rem; text-decoration: none; color: var(--ink); }
+.stamps .ph { height: 10rem; display: flex; align-items: center; justify-content: center; }
+.stamps .ph img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.stamps .tx { height: 10rem; display: flex; align-items: center; justify-content: center; text-align: center; padding: .6rem;
+  border: 2px solid var(--rule); font-family: var(--gothic); font-size: 1.5rem; line-height: 1.05; color: var(--soft); }
+.stamps .tx small, .item-stamp .tx small { display: block; margin-top: .4rem; font-family: var(--serif); font-size: .85rem; letter-spacing: 0; color: var(--soft); }
+.stamps .tx > span, .item-stamp .tx > span { color: var(--head); }
+.stamps .t { font-family: var(--gothic); font-size: 1.3rem; line-height: 1.1; color: var(--head); }
+.stamps .c { font-size: .9rem; color: var(--soft); margin-top: auto; }
+.stamps .more { font-size: .9rem; color: var(--soft); }
+.stamps .more a { color: var(--soft); }
+.stamps a.card:hover .t { text-decoration: underline 1px; }
+.badge { align-self: flex-start; font-size: .78rem; letter-spacing: .04em; text-transform: uppercase; color: var(--head);
+  border: 1.5px solid currentColor; padding: .05rem .45rem; border-radius: 2px; }
+
+/* Item page */
+.crumbs { font-size: .95rem; color: var(--soft); margin: 0 0 1.2rem; }
+.crumbs a { color: var(--soft); }
+.item { display: grid; gap: 1.6rem; align-items: start; }
+.item-stamp { --r: 7px; padding: 1.4rem; }
+.item-stamp .frame { border: 2px solid var(--purple); padding: 1rem; display: flex; align-items: center; justify-content: center; min-height: 14rem; }
+.item-stamp img { display: block; max-width: 100%; max-height: 70vh; height: auto; object-fit: contain; }
+.item-stamp .tx { font-family: var(--gothic); font-size: 2rem; line-height: 1.05; color: var(--soft); text-align: center; padding: 1rem; }
+@media (prefers-color-scheme: dark) { .item-stamp .frame { border-color: var(--lilac); } }
+.item h1 { font-size: clamp(2rem, 6vw, 3rem); line-height: 1.04; }
+.facts { list-style: none; padding: 0; margin: 1rem 0; }
+.facts li { padding: .45rem 0; border-bottom: 1px solid var(--rule); display: grid; grid-template-columns: 7rem 1fr; gap: .6rem; }
+.facts b { font-weight: 400; color: var(--soft); }
+.note { color: var(--soft); font-size: .95rem; margin: .4rem 0 0; }
+.btn { display: block; text-align: center; background: var(--purple); color: #fff; font-family: var(--gothic);
+  font-size: 1.8rem; letter-spacing: .03em; line-height: 1; padding: 1rem 1rem; margin: 1.2rem 0 .6rem;
+  text-decoration: none; border-radius: 4px; border: 2px solid var(--purple); }
+@media (prefers-color-scheme: dark) { .btn { border-color: var(--lilac); } }
+@media (prefers-reduced-motion: no-preference) {
+  .btn { transition: transform .08s ease-out; }
+  .btn:active { transform: translateY(1px); }
+}
+.related { margin: 2.6rem 0 0; }
+.related h2 { font-size: 2rem; border-bottom: 2px solid var(--purple); padding-bottom: .35rem; }
+@media (prefers-color-scheme: dark) { .related h2 { border-color: var(--lilac); } }
+
+/* Footer */
+footer.selvage { margin-top: 2rem; }
+.foot { max-width: 72rem; margin: 0 auto; padding: 1.4rem 1rem 1.8rem; display: flex; flex-wrap: wrap; gap: .4rem 2rem; align-items: baseline; }
+.sign { font-family: var(--gothic); font-size: 1.7rem; margin: 0; }
+.foot p { margin: 0; }
+.tags { flex-basis: 100%; font-size: .9rem; opacity: .85; }
+
+@media (min-width: 44rem) {
+  .find { grid-template-columns: 2fr 1fr 1fr; align-items: end; }
+  .item { grid-template-columns: 1fr 1fr; }
+  .btn { display: inline-block; padding: 1rem 2.8rem; }
+}
