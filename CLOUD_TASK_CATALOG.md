@@ -1,5 +1,9 @@
 # CLOUD TASK: the listing catalog for www.stampedestamps.store
 
+> **SUPERSEDED 2026-10-15:** the 2026-10-11 cloud session pushed nothing and Douglas reported it "not built", so he
+> moved this build to a local Claude Code session on OMEN. That session built it to this spec (build.py, tests/,
+> catalog/). Kept as the spec the build follows; do not start another cloud session from it.
+
 Staged on OMEN, Sun 2026-10-11, by a local Claude Code session, from Douglas's rulings that day:
 **one catalog on the store's own domain, no prices, photos where we have scans, built by one cloud session.**
 
