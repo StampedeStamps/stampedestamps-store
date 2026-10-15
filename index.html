@@ -119,8 +119,25 @@
   .stamps li { display: flex; }
   .stamps a { flex: 1; display: flex; flex-direction: column; gap: .6rem; padding: 1.15rem 1.1rem 1rem; text-decoration: none; color: var(--ink); }
   .stamps .slot { height: 10rem; }
-  /* Six newly listed cards: two rows of three on wider screens (five-across left one card alone) */
+  /* Twelve newly listed cards: 3 across on tablets, 4 across on desktops (always full rows) */
   @media (min-width: 44rem) { #new .stamps { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  @media (min-width: 62rem) { #new .stamps { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+  /* Hero catalog search */
+  .find { margin: 0 0 1.1rem; max-width: 36rem; }
+  .find label { display: block; font-family: var(--gothic); font-size: 1.45rem; color: var(--head); }
+  .find .bar { display: flex; gap: .5rem; margin: .35rem 0 0; }
+  .find input { flex: 1; min-width: 0; font: inherit; font-size: 1.1rem; padding: .75rem .9rem; color: var(--ink);
+    background: var(--paper); border: 2px solid var(--purple); border-radius: 3px; }
+  .find button { font-family: var(--gothic); font-size: 1.45rem; letter-spacing: .03em; line-height: 1; padding: .6rem 1.3rem;
+    color: #fff; background: var(--purple); border: 2px solid var(--purple); border-radius: 3px; cursor: pointer; }
+  @media (prefers-color-scheme: dark) { .find input, .find button { border-color: var(--lilac); } }
+
+  /* The category sheet with a real stamp in every tile */
+  .photo-pane .tile { justify-content: flex-start; gap: .45rem; }
+  .photo-pane .pic { height: 8.5rem; display: flex; align-items: center; justify-content: center; margin-bottom: .2rem; }
+  .photo-pane .pic img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  .photo-pane .tile b { font-size: 1.5rem; }
   .stamps .t { font-family: var(--gothic); font-size: 1.3rem; line-height: 1.1; color: var(--head); }
   .stamps .c { font-size: .9rem; color: var(--soft); margin-top: auto; }
   .stamps a:hover .t { text-decoration: underline 1px; }
@@ -159,13 +176,16 @@
   .tags { flex-basis: 100%; font-size: .9rem; opacity: .85; }
 
   @media (min-width: 44rem) {
-    .hero-row { grid-template-columns: 1.3fr 1fr; }
+    .hero-row { grid-template-columns: 1.7fr 1fr; }
+    .hero-photo { max-width: 22rem; justify-self: end; width: 100%; }
     .pane { grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 16px 48px 16px 16px; }
+    .photo-pane { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .pane .inscription { width: 48px; }
     .ways, .promise { grid-template-columns: 1fr 1fr; }
     .promise { grid-template-columns: repeat(3, 1fr); }
     .btn { display: inline-block; padding: .9rem 2.6rem; }
   }
+  @media (min-width: 62rem) { .photo-pane { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 </style>
 </head>
 <body>
@@ -189,14 +209,20 @@
 
 <main id="main">
 
-  <!-- ===================== HERO ===================== -->
+  <!-- ===================== HERO: headline, catalog search, logo stamp ===================== -->
   <section class="hero">
     <div class="hero-row">
       <div>
         <h1>From U.S. classics to worldwide flair.</h1>
-        <p class="lede">Sheets and panes, singles, covers, revenues and a few travelers from abroad, all with low starting bids. Pick a category below, or head straight to the shop.</p>
+        <p class="lede">Sheets and panes, singles, covers, revenues and a few travelers from abroad, all with low starting bids. Every stamp opens on eBay.</p>
+        <form class="find" action="catalog/" method="get" role="search">
+          <label for="q">Search the catalog</label>
+          <div class="bar">
+            <input id="q" name="q" type="search" placeholder="Try Batman, eagle, Boston or 1962" autocomplete="off">
+            <button type="submit">Search</button>
+          </div>
+        </form>
         <p class="verse">Combine wins, shipping drops too,<br>follow us &mdash; fresh finds for you!</p>
-        <a class="btn" href="https://www.ebay.com/str/stampedeusa" target="stampede_ebay">Shop the eBay store</a>
       </div>
       <div class="hero-photo perf edged">
         <div class="frame slot" data-file="images/hero.jpg">
@@ -208,33 +234,43 @@
     <p class="facts"><span><b>100%</b>positive feedback</span><span><b>248+</b>items sold</span><span><b>Combined</b>shipping on multiple wins</span></p>
   </section>
 
-  <!-- ===================== FEATURED CATEGORIES (the stamp sheet) ===================== -->
+  <!-- ===================== SHOP BY CATEGORY: the stamp sheet, each tile a real stamp (rewritten by build.py every morning) ===================== -->
   <section class="block" id="categories">
-    <h2>Featured categories <a href="shop.html">Browse everything</a></h2>
-    <nav aria-label="Featured categories" style="margin-top:1.1rem">
-      <ul class="pane">
-        <li><a class="tile perf" href="https://www.ebay.com/str/stampedeusa?_nkw=revenue" target="stampede_ebay"><b>Back of Book</b><span>Revenues, fees and more</span></a></li>
-        <li><a class="tile perf" href="https://www.ebay.com/str/stampedeusa?_nkw=sheet" target="stampede_ebay"><b>Sheets</b><span>Full sheets and panes</span></a></li>
-        <li><a class="tile perf" href="https://www.ebay.com/str/stampedeusa/United-States/_i.html" target="stampede_ebay"><b>United States</b><span>Classics to modern</span></a></li>
-        <li><a class="tile perf" href="https://www.ebay.com/str/stampedeusa?_nkw=cover" target="stampede_ebay"><b>Covers</b><span>Postal history</span></a></li>
-        <li><a class="tile perf" href="https://www.ebay.com/str/stampedeusa?_nkw=united+nations" target="stampede_ebay"><b>United Nations</b><span>New York, Geneva, Vienna</span></a></li>
-        <li><a class="tile perf" href="https://www.ebay.com/str/stampedeusa/Europe/_i.html" target="stampede_ebay"><b>Europe</b><span>Old World favorites</span></a></li>
+    <h2>Shop by category <a href="shop.html#collector">All categories</a></h2>
+    <nav aria-label="Shop by category" style="margin-top:1.1rem">
+      <ul class="pane photo-pane">
+        <!-- CATEGORY-SHEET:START (written by build.py: the 8 largest categories that have a photo - do not edit by hand) -->
+      <li><a class="tile perf" href="catalog/?cat=sheets"><span class="pic"><img src="images/catalog/168765330148.jpg" alt="Scott #3105 1996 32c Endangered Species Panther Manatee Pane of 15 P3333 MNH" loading="lazy"></span><b>Sheets</b><span>178 stamps</span></a></li>
+      <li><a class="tile perf" href="catalog/?cat=revenues"><span class="pic"><img src="images/catalog/168784117753.jpg" alt="Scott #RJA105 (MNG) 1963 Narcotic Tax 1c imperf single" loading="lazy"></span><b>Revenues</b><span>69 stamps</span></a></li>
+      <li><a class="tile perf" href="catalog/?cat=1901-40-unused"><span class="pic"><img src="images/catalog/168784118187.jpg" alt="Scott #638 (MNG) 1927 6c Garfield Red Orange Rotary No Gum" loading="lazy"></span><b>1901-40: Unused</b><span>39 stamps</span></a></li>
+      <li><a class="tile perf" href="catalog/?cat=postal-history"><span class="pic"><img src="images/catalog/168784118134.jpg" alt="Scott #230 (Used) 1893 1c Columbian Pair on Cover Connecticut to Jersey City" loading="lazy"></span><b>Postal History</b><span>33 stamps</span></a></li>
+      <li><a class="tile perf" href="catalog/?cat=19th-century-unused"><span class="pic"><img src="images/catalog/168784118138.jpg" alt="Scott #230 (MH) 1893 1c Deep Blue Columbian Columbus in Sight of Land" loading="lazy"></span><b>19th Century: Unused</b><span>12 stamps</span></a></li>
+      <li><a class="tile perf" href="catalog/?cat=19th-century-used"><span class="pic"><img src="images/catalog/168784117738.jpg" alt="Scott #209 (Used) 1882 10c Brown Jefferson American Bank Note Re-Engraved" loading="lazy"></span><b>19th Century: Used</b><span>12 stamps</span></a></li>
+      <li><a class="tile perf" href="catalog/?cat=collections-lots"><span class="pic"><img src="images/catalog/168759487945.jpg" alt="1978 US Commemorative Year Set (MNH) Sealed Pack Sandburg Tubman Mars Owls" loading="lazy"></span><b>Collections &amp; Lots</b><span>11 stamps</span></a></li>
+      <li><a class="tile perf" href="catalog/?cat=other-us-event-stamp-covers"><span class="pic"><img src="images/catalog/168784118117.jpg" alt="Scott #680 (Used) 1929 Wright Brothers 26th Anniversary Flight Cover Pair" loading="lazy"></span><b>Event Covers</b><span>8 stamps</span></a></li>
+      <!-- CATEGORY-SHEET:END -->
         <li class="inscription" aria-hidden="true">Low starting bids</li>
       </ul>
     </nav>
   </section>
 
-  <!-- ===================== NEWLY LISTED (the six cards are rewritten by build.py every morning) ===================== -->
+  <!-- ===================== NEWLY LISTED (the twelve cards are rewritten by build.py every morning) ===================== -->
   <section class="block" id="new">
     <h2>Newly listed <a href="https://www.ebay.com/str/stampedeusa" target="stampede_ebay">See all on eBay</a></h2>
     <ul class="stamps">
-      <!-- NEWLY-LISTED:START (written by build.py: the 6 newest listings that have a photo - do not edit by hand) -->
+      <!-- NEWLY-LISTED:START (written by build.py: the 12 newest listings that have a photo - do not edit by hand) -->
       <li class="edged"><a class="perf" href="catalog/item/168784118278.html"><span class="slot"><img src="images/catalog/168784118278.jpg" alt="Scott #C10 (Used) 1928 Last Day Old Air Mail Rate Cover St Louis Chicago" loading="lazy"></span><span class="t">Scott #C10 (Used) 1928 Last Day Old Air Mail Rate Cover St Louis Chicago</span><span class="c">Event Covers</span></a></li>
       <li class="edged"><a class="perf" href="catalog/item/168784118258.html"><span class="slot"><img src="images/catalog/168784118258.jpg" alt="Scott #648 (MH) 1928 5c Hawaii Sesquicentennial Single" loading="lazy"></span><span class="t">Scott #648 (MH) 1928 5c Hawaii Sesquicentennial Single</span><span class="c">1901-40: Unused</span></a></li>
       <li class="edged"><a class="perf" href="catalog/item/168784118254.html"><span class="slot"><img src="images/catalog/168784118254.jpg" alt="Scott #623 (MH) 1925 17c Woodrow Wilson Single" loading="lazy"></span><span class="t">Scott #623 (MH) 1925 17c Woodrow Wilson Single</span><span class="c">1901-40: Unused</span></a></li>
       <li class="edged"><a class="perf" href="catalog/item/168784118237.html"><span class="slot"><img src="images/catalog/168784118237.jpg" alt="Scott #C10 (Used) 1928 CAM 1 Airplane Motorcycle Courier Cover Westfield" loading="lazy"></span><span class="t">Scott #C10 (Used) 1928 CAM 1 Airplane Motorcycle Courier Cover Westfield</span><span class="c">First Flight</span></a></li>
       <li class="edged"><a class="perf" href="catalog/item/168784118233.html"><span class="slot"><img src="images/catalog/168784118233.jpg" alt="Scott #C10 (Used) 1927 Lindbergh First Day Covers Little Falls MN Lot of 2" loading="lazy"></span><span class="t">Scott #C10 (Used) 1927 Lindbergh First Day Covers Little Falls MN Lot of 2</span><span class="c">Pre-1930</span></a></li>
       <li class="edged"><a class="perf" href="catalog/item/168784118228.html"><span class="slot"><img src="images/catalog/168784118228.jpg" alt="Scott #634 (MNH) 1926 2c George Washington Single" loading="lazy"></span><span class="t">Scott #634 (MNH) 1926 2c George Washington Single</span><span class="c">1901-40: Unused</span></a></li>
+      <li class="edged"><a class="perf" href="catalog/item/168784118223.html"><span class="slot"><img src="images/catalog/168784118223.jpg" alt="Scott #832 (MH) 1938 $1 Woodrow Wilson Presidential Single" loading="lazy"></span><span class="t">Scott #832 (MH) 1938 $1 Woodrow Wilson Presidential Single</span><span class="c">1901-40: Unused</span></a></li>
+      <li class="edged"><a class="perf" href="catalog/item/168784118221.html"><span class="slot"><img src="images/catalog/168784118221.jpg" alt="Scott #618 (MNH) 1925 2c Birth of Liberty Lexington-Concord Issue Single" loading="lazy"></span><span class="t">Scott #618 (MNH) 1925 2c Birth of Liberty Lexington-Concord Issue Single</span><span class="c">1901-40: Unused</span></a></li>
+      <li class="edged"><a class="perf" href="catalog/item/168784118214.html"><span class="slot"><img src="images/catalog/168784118214.jpg" alt="Scott #635 (MNH) 1927 3c Abraham Lincoln Rotary Press Regular Issue Single" loading="lazy"></span><span class="t">Scott #635 (MNH) 1927 3c Abraham Lincoln Rotary Press Regular Issue Single</span><span class="c">1901-40: Unused</span></a></li>
+      <li class="edged"><a class="perf" href="catalog/item/168784118206.html"><span class="slot"><img src="images/catalog/168784118206.jpg" alt="Scott #423 (MH) 1937 Philippines 4 Pesos Montalban Gorge Commonwealth Overprint" loading="lazy"></span><span class="t">Scott #423 (MH) 1937 Philippines 4 Pesos Montalban Gorge Commonwealth Overprint</span><span class="c">U.S. Possessions</span></a></li>
+      <li class="edged"><a class="perf" href="catalog/item/168784118198.html"><span class="slot"><img src="images/catalog/168784118198.jpg" alt="Scott #496 (Used) 1919 5c Washington Blue Coil Perf 10 Vertically" loading="lazy"></span><span class="t">Scott #496 (Used) 1919 5c Washington Blue Coil Perf 10 Vertically</span><span class="c">1901-Now: Used</span></a></li>
+      <li class="edged"><a class="perf" href="catalog/item/168784118194.html"><span class="slot"><img src="images/catalog/168784118194.jpg" alt="Scott #661 (MNG) 1929 3c Abraham Lincoln overprinted Kans. Single" loading="lazy"></span><span class="t">Scott #661 (MNG) 1929 3c Abraham Lincoln overprinted Kans. Single</span><span class="c">1901-40: Unused</span></a></li>
       <!-- NEWLY-LISTED:END -->
     </ul>
     <p class="note">Prices, bids and time left are always current on eBay.</p>
@@ -256,23 +292,6 @@
         <a class="btn" href="https://www.ebay.com/str/stampedeusa?LH_BIN=1" target="stampede_ebay">Shop Buy It Now</a>
       </div></div>
     </div>
-  </section>
-
-  <!-- ===================== SHOP BY REGION ===================== -->
-  <section class="block" id="regions">
-    <h2>Shop by region</h2>
-    <ul class="rows">
-      <li><a href="https://www.ebay.com/str/stampedeusa/United-States/_i.html" target="stampede_ebay">United States</a></li>
-      <li><a href="https://www.ebay.com/str/stampedeusa/Canada/_i.html" target="stampede_ebay">Canada</a></li>
-      <li><a href="https://www.ebay.com/str/stampedeusa/Great-Britain/_i.html" target="stampede_ebay">Great Britain</a></li>
-      <li><a href="https://www.ebay.com/str/stampedeusa/British-Colonies-Territories/_i.html" target="stampede_ebay">British Colonies &amp; Territories</a></li>
-      <li><a href="https://www.ebay.com/str/stampedeusa/Europe/_i.html" target="stampede_ebay">Europe</a></li>
-      <li><a href="https://www.ebay.com/str/stampedeusa/Asia/_i.html" target="stampede_ebay">Asia</a></li>
-      <li><a href="https://www.ebay.com/str/stampedeusa/Latin-America/_i.html" target="stampede_ebay">Latin America</a></li>
-      <li><a href="https://www.ebay.com/str/stampedeusa/Africa/_i.html" target="stampede_ebay">Africa</a></li>
-      <li><a href="https://www.ebay.com/str/stampedeusa/Worldwide/_i.html" target="stampede_ebay">Worldwide</a></li>
-      <li><a href="https://www.ebay.com/str/stampedeusa/Entertainment-Memorabilia/_i.html" target="stampede_ebay">Entertainment Memorabilia</a></li>
-    </ul>
   </section>
 
   <!-- ===================== OUR PROMISE ===================== -->

@@ -252,7 +252,8 @@ def update_shop(rows):
     return len(cats)
 
 
-NEW_START, NEW_END, NEW_COUNT = "<!-- NEWLY-LISTED:START", "<!-- NEWLY-LISTED:END -->", 6
+NEW_START, NEW_END, NEW_COUNT = "<!-- NEWLY-LISTED:START", "<!-- NEWLY-LISTED:END -->", 12
+SHEET_START, SHEET_END, SHEET_COUNT = "<!-- CATEGORY-SHEET:START", "<!-- CATEGORY-SHEET:END -->", 8
 
 
 def replace_block(path, start, end, items):
@@ -286,6 +287,29 @@ def update_home(rows, imgs):
     return [r["item"] for r in picked]
 
 
+def update_home_sheet(rows, imgs, avoid=()):
+    """Home's category sheet (Douglas 2026-10-15, "Photo storefront"): the largest categories that have at least one
+    photographed listing, each tile showing that category's newest photographed stamp NOT already shown in Newly
+    listed (`avoid`; falls back to one that is), linking to the catalog filtered to it. Returns the categories."""
+    counts, face, fallback = {}, {}, {}
+    for r in sorted(rows, key=lambda r: r["item"], reverse=True):
+        counts[r["category"]] = counts.get(r["category"], 0) + 1
+        if r["item"] in imgs:
+            target = fallback if r["item"] in avoid else face
+            target.setdefault(r["category"], r)
+    for c, r in fallback.items():
+        face.setdefault(c, r)
+    cats = [c for c, _ in sorted(counts.items(), key=lambda kv: (-kv[1], kv[0])) if c in face][:SHEET_COUNT]
+    items = []
+    for c in cats:
+        n, r = counts[c], face[c]
+        items.append(f'<li><a class="tile perf" href="catalog/?cat={esc(slug(c))}">'
+                     f'<span class="pic"><img src="{esc(imgs[r["item"]])}" alt="{esc(r["title"])}" loading="lazy"></span>'
+                     f'<b>{esc(FRIENDLY.get(c, c))}</b><span>{n} {"stamp" if n == 1 else "stamps"}</span></a></li>')
+    replace_block(os.path.join(HERE, "index.html"), SHEET_START, SHEET_END, items)
+    return cats
+
+
 def write(path, text):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", encoding="utf-8", newline="\n") as f:
@@ -312,8 +336,9 @@ def main():
     write(os.path.join(HERE, "robots.txt"), f"User-agent: *\nAllow: /\nSitemap: {SITE}/sitemap.xml\n")
     ncat = update_shop(rows)
     newest = update_home(rows, imgs)
+    sheet = update_home_sheet(rows, imgs, avoid=set(newest))
     print(f"built {len(rows)} item pages + catalog index ({len(imgs)} with photos), sitemap {len(urls)} urls, "
-          f"shop categories {ncat}, home newly listed {len(newest)}, as of {lastmod}")
+          f"shop categories {ncat}, home newly listed {len(newest)}, home category sheet {len(sheet)}, as of {lastmod}")
 
 
 if __name__ == "__main__":

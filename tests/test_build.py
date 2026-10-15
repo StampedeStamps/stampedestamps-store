@@ -94,13 +94,28 @@ class BuildTests(unittest.TestCase):
         self.assertEqual(set(cats), live, "Shop list and catalog categories differ")
         self.assertNotIn("stampede-stories", block)
 
-    def test_home_newly_listed_is_six_newest_with_photos(self):
+    def test_home_category_sheet_tiles_have_photos_and_live_filters(self):
+        home = open(os.path.join(ROOT, "index.html"), encoding="utf-8").read()
+        block = home[home.index("<!-- CATEGORY-SHEET:START"):home.index("<!-- CATEGORY-SHEET:END -->")]
+        cats = re.findall(r'href="catalog/\?cat=([a-z0-9-]+)"', block)
+        imgs = re.findall(r'src="(images/catalog/\d+\.jpg)"', block)
+        index = open(os.path.join(ROOT, "catalog", "index.html"), encoding="utf-8").read()
+        live = set(re.findall(r'data-c="([a-z0-9-]+)"', index))
+        self.assertEqual(len(cats), 8, "Home category sheet must have eight tiles")
+        self.assertEqual(len(imgs), 8, "every category tile needs a photo")
+        self.assertEqual(len(set(cats)), 8)
+        for c in cats:
+            self.assertIn(c, live, c)
+        for p in imgs:
+            self.assertTrue(os.path.exists(os.path.join(ROOT, p)), p)
+
+    def test_home_newly_listed_is_twelve_newest_with_photos(self):
         home = open(os.path.join(ROOT, "index.html"), encoding="utf-8").read()
         block = home[home.index("<!-- NEWLY-LISTED:START"):home.index("<!-- NEWLY-LISTED:END -->")]
         items = re.findall(r'href="catalog/item/(\d+)\.html"', block)
         imgs = re.findall(r'src="(images/catalog/\d+\.jpg)"', block)
-        self.assertEqual(len(items), 6, "Home must show six newly listed cards")
-        self.assertEqual(len(set(items)), 6)
+        self.assertEqual(len(items), 12, "Home must show twelve newly listed cards")
+        self.assertEqual(len(set(items)), 12)
         live = {r["item"] for r in self.rows}
         for i in items:
             self.assertIn(i, live, f"Home card for a listing that is not active: {i}")
