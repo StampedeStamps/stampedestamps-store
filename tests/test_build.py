@@ -98,7 +98,7 @@ class BuildTests(unittest.TestCase):
         home = open(os.path.join(ROOT, "index.html"), encoding="utf-8").read()
         block = home[home.index("<!-- CATEGORY-SHEET:START"):home.index("<!-- CATEGORY-SHEET:END -->")]
         cats = re.findall(r'href="catalog/\?cat=([a-z0-9-]+)"', block)
-        imgs = re.findall(r'src="(images/catalog/\d+\.jpg)"', block)
+        imgs = re.findall(r'src="(images/catalog/\d+(?:-e)?\.jpg)"', block)
         index = open(os.path.join(ROOT, "catalog", "index.html"), encoding="utf-8").read()
         live = set(re.findall(r'data-c="([a-z0-9-]+)"', index))
         self.assertEqual(len(cats), 8, "Home category sheet must have eight tiles")
@@ -113,7 +113,7 @@ class BuildTests(unittest.TestCase):
         home = open(os.path.join(ROOT, "index.html"), encoding="utf-8").read()
         block = home[home.index("<!-- NEWLY-LISTED:START"):home.index("<!-- NEWLY-LISTED:END -->")]
         items = re.findall(r'href="catalog/item/(\d+)\.html"', block)
-        imgs = re.findall(r'src="(images/catalog/\d+\.jpg)"', block)
+        imgs = re.findall(r'src="(images/catalog/\d+(?:-e)?\.jpg)"', block)
         self.assertEqual(len(items), 12, "Home must show twelve newly listed cards")
         self.assertEqual(len(set(items)), 12)
         live = {r["item"] for r in self.rows}
