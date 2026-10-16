@@ -575,12 +575,13 @@ def main():
     for r in rows:
         if not kinds_of([r]):
             no_kind[r["category"]] = no_kind.get(r["category"], 0) + 1
+    if no_kind:   # a new country category shows up here first; add it to COUNTRIES
+        print(f"{sum(no_kind.values())} listings in no About kind: " + "; ".join(f"{k} {v}" for k, v in sorted(no_kind.items())))
+    # the summary stays the LAST line: the morning refresh logs only the last line it prints
     print(f"built {len(rows)} item pages + catalog index ({len(imgs)} with photos), sitemap {len(urls)} urls, "
           f"shop categories {ncat}, home newly listed {len(newest)}, home category sheet {len(sheet)}, "
           f"about tiles {len(tiles)}, feedback fresh {len(fresh)}, sale markdowns {len(marked)}, "
           f"sale ending soonest {len(soon)} (clock {now:%Y-%m-%dT%H:%M:%SZ}), as of {lastmod}")
-    if no_kind:   # a new country category shows up here first; add it to COUNTRIES
-        print(f"{sum(no_kind.values())} listings in no About kind: " + "; ".join(f"{k} {v}" for k, v in sorted(no_kind.items())))
 
 
 if __name__ == "__main__":
