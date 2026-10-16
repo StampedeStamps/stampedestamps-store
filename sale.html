@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Sale | StampedeUSA</title>
-<meta name="description" content="StampedeUSA sale: marked-down U.S. sheets, panes and souvenir sheets, plus combined shipping and low starting bids. Every purchase is made safely on eBay.">
+<meta name="description" content="StampedeUSA sale page: the auctions ending soonest, every one with a low starting bid, any markdown running on eBay, and combined shipping. Every purchase is made safely on eBay.">
 <meta name="theme-color" content="#4B006E">
 <style>
   /* Same look as Stamp Stories (stampedestamps.github.io/stampede-stories) */
@@ -86,10 +86,16 @@
   @media (prefers-color-scheme: dark) { .block > h2 { border-color: var(--lilac); } }
   .note { color: var(--soft); font-size: .95rem; margin: .5rem 0 0; }
 
-  /* Sale items: perforated stamp cards (text only, like Stamp Stories) */
+  /* Ending soonest and marked down: perforated stamp cards with the stamp's photo (same as Home's Newly listed) */
   .stamps { list-style: none; padding: 0; margin: 1.1rem 0 0; display: grid; gap: 1.1rem;
     grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); }
   .stamps li { display: flex; }
+  .stamps li[hidden] { display: none; }
+  .slot { position: relative; overflow: hidden; }
+  .slot img { display: block; width: 100%; height: 100%; object-fit: contain; }
+  .stamps .slot { height: 10rem; }
+  @media (min-width: 44rem) { #ending .stamps, #on-sale .stamps { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  @media (min-width: 62rem) { #ending .stamps, #on-sale .stamps { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
   .stamps a { flex: 1; display: flex; flex-direction: column; gap: .6rem; padding: 1.15rem 1.1rem 1rem; text-decoration: none; color: var(--ink); }
   .stamps .tag { align-self: flex-start; font-size: .8rem; letter-spacing: .04em; text-transform: uppercase; color: var(--cancel);
     border: 1.5px solid currentColor; padding: .05rem .45rem; border-radius: 2px; }
@@ -148,51 +154,64 @@
 
 <main id="main">
 
-  <!-- ===================== HERO ===================== -->
+  <!-- ===================== HERO (written by build.py: a markdown when one is running, otherwise the auctions) ===================== -->
   <section class="hero">
     <div class="hero-row">
+      <!-- SALE-HERO:START (written by build.py from data/sale_items.csv and the listings - do not edit by hand) -->
       <div>
-        <h1>Marked down, still marvelous.</h1>
-        <p class="lede">A big batch of U.S. sheets, panes and souvenir sheets is marked down on eBay right now. Same stamps, same photos, a little friendlier on the wallet. Each listing shows its sale price.</p>
-        <p class="verse">These sheets and panes are marked down today,<br>
-          a friendlier price for the stamps on display.<br>
-          So pick out a favorite, or gather a few,<br>
-          with combined shipping, the savings add up too! - StampedeUSA</p>
-        <a class="btn" href="https://www.ebay.com/str/stampedeusa?_tab=sales" target="stampede_ebay">See every sale item</a>
+        <h1>Starting low, ending soon.</h1>
+        <p class="lede">Every StampedeUSA auction opens with a low starting bid, and auctions end every week. Here are the ones ending soonest. Markdowns, when we run them, are on our <a href="https://www.ebay.com/str/stampedeusa?_tab=sales" target="stampede_ebay">eBay Sale tab</a>.</p>
+        <p class="verse">Our auctions start low and the clock's always ticking,<br>
+          a sheet or a cover is yours for the picking.<br>
+          So place a fair bid on the stamp you adore,<br>
+          and combined shipping helps you save even more! - StampedeUSA</p>
+        <a class="btn" href="catalog/?fmt=Auction">See every auction</a>
       </div>
       <div class="sticker perf edged" aria-hidden="true">
-        <div class="frame"><b>On sale</b><span>Savings shown on every listing</span></div>
+        <div class="frame"><b>Starts low</b><span>Auctions end every week</span></div>
       </div>
+      <!-- SALE-HERO:END -->
     </div>
   </section>
 
-  <!-- ===================== ON SALE NOW (swap these when the sale changes) ===================== -->
-  <section class="block" id="on-sale">
-    <h2>On sale now <a href="https://www.ebay.com/str/stampedeusa?_tab=sales" target="stampede_ebay">See all on eBay</a></h2>
-    <ul class="stamps">
-      <li class="edged"><a class="perf" href="https://www.ebay.com/itm/167532711458" target="stampede_ebay"><span class="tag">Marked down</span>
-        <span class="t">Scott #4340a 2008 42c Vintage Black Cinema Se-Tenant Sheet of 20 P1111 MNH</span><span class="c">Sheet</span></a></li>
-      <li class="edged"><a class="perf" href="https://www.ebay.com/itm/167532711473" target="stampede_ebay"><span class="tag">Marked down</span>
-        <span class="t">Scott #3997 Chinese Lunar New Year 2006 39c Souvenir Sheet of 12 Zodiac MNH</span><span class="c">Souvenir sheet</span></a></li>
-      <li class="edged"><a class="perf" href="https://www.ebay.com/itm/167532711477" target="stampede_ebay"><span class="tag">Marked down</span>
-        <span class="t">Scott #4159 2007 41c Marvel Comics Super Heroes MNH Sheet of 20 Plate V11111</span><span class="c">Sheet</span></a></li>
-      <li class="edged"><a class="perf" href="https://www.ebay.com/itm/167532711478" target="stampede_ebay"><span class="tag">Marked down</span>
-        <span class="t">Scott #3818a 2003 37c Reptiles Amphibians Sheet 20 MNH Turtle Snake Frog Lizard</span><span class="c">Sheet</span></a></li>
-      <li class="edged"><a class="perf" href="https://www.ebay.com/itm/167532711482" target="stampede_ebay"><span class="tag">Marked down</span>
-        <span class="t">Scott #5938c 2024 Autumn Colors Imperforate Forever Se-Tenant Pane of 20 MNH</span><span class="c">Pane</span></a></li>
-      <li class="edged"><a class="perf" href="https://www.ebay.com/itm/167532711491" target="stampede_ebay"><span class="tag">Marked down</span>
-        <span class="t">Scott #4084 2006 39c DC Comics Super Heroes Pane 20 Batman Selvage Tear MNH</span><span class="c">Pane</span></a></li>
-      <li class="edged"><a class="perf" href="https://www.ebay.com/itm/167532711493" target="stampede_ebay"><span class="tag">Marked down</span>
-        <span class="t">Scott #5522a 2020 Forever Thank You Pane of 20 Se-Tenant Plate B11111 MNH</span><span class="c">Pane</span></a></li>
-      <li class="edged"><a class="perf" href="https://www.ebay.com/itm/167532711500" target="stampede_ebay"><span class="tag">Marked down</span>
-        <span class="t">Scott #3895 2005 37c Chinese New Year 12 Zodiac Animals 2-Sided Pane of 24 MNH</span><span class="c">Pane</span></a></li>
-      <li class="edged"><a class="perf" href="https://www.ebay.com/itm/167532711508" target="stampede_ebay"><span class="tag">Marked down</span>
-        <span class="t">Scott #5125a 2016 Forever Pets Booklet of 20 Se-Tenant Dogs Cats P1111 MNH</span><span class="c">Booklet</span></a></li>
-      <li class="edged"><a class="perf" href="https://www.ebay.com/itm/167532711509" target="stampede_ebay"><span class="tag">Marked down</span>
-        <span class="t">Scott #5394 2019 Forever Sesame Street Pane of 16 Se-Tenant Elmo Big Bird MNH</span><span class="c">Pane</span></a></li>
+  <!-- ===================== MARKED DOWN NOW: only while data/sale_items.csv lists a markdown that is still running ===================== -->
+  <!-- SALE-MARKDOWNS:START (written by build.py - empty while no markdown is running; do not edit by hand) -->
+  <!-- SALE-MARKDOWNS:END -->
+
+  <!-- ===================== ENDING SOONEST: auctions with their photos, rewritten by build.py every morning ===================== -->
+  <!-- SALE-ENDING:START (written by build.py: the auctions ending soonest - do not edit by hand) -->
+  <section class="block" id="ending">
+    <h2>Ending soonest <a href="https://www.ebay.com/str/stampedeusa?_sop=1" target="stampede_ebay">See them on eBay</a></h2>
+    <ul class="stamps" id="ending-cards" data-show="12">
+      <li class="edged" data-ends="2026-10-20T22:47:07Z"><a class="perf" href="catalog/item/168784117484.html"><span class="slot"><img src="images/catalog/168784117484.jpg" alt="Scott #654 (MNH) 1929 2c Edison Electric Light Golden Jubilee Flat Plate" loading="lazy"></span><span class="t">Scott #654 (MNH) 1929 2c Edison Electric Light Golden Jubilee Flat Plate</span><span class="c">1901-40: Unused</span></a></li>
+      <li class="edged" data-ends="2026-10-20T22:47:08Z"><a class="perf" href="catalog/item/168784117518.html"><span class="slot"><img src="images/catalog/168784117518.jpg" alt="Scott #642 (MNH) 1927 10c James Monroe Rotary Press Regular Issue Single" loading="lazy"></span><span class="t">Scott #642 (MNH) 1927 10c James Monroe Rotary Press Regular Issue Single</span><span class="c">1901-40: Unused</span></a></li>
+      <li class="edged" data-ends="2026-10-20T22:47:08Z"><a class="perf" href="catalog/item/168784117535.html"><span class="slot"><img src="images/catalog/168784117535.jpg" alt="Scott #614 615 616 (MNH) 1924 Huguenot-Walloon Tercentenary Set of 3" loading="lazy"></span><span class="t">Scott #614 615 616 (MNH) 1924 Huguenot-Walloon Tercentenary Set of 3</span><span class="c">1901-40: Unused</span></a></li>
+      <li class="edged" data-ends="2026-10-20T22:47:08Z"><a class="perf" href="catalog/item/168784117560.html"><span class="slot"><img src="images/catalog/168784117560.jpg" alt="Scott #UX3 (MNG) 1c Liberty Postal Card Port Huron Michigan Advertising" loading="lazy"></span><span class="t">Scott #UX3 (MNG) 1c Liberty Postal Card Port Huron Michigan Advertising</span><span class="c">Postal Cards &amp; Stationery</span></a></li>
+      <li class="edged" data-ends="2026-10-20T22:47:09Z"><a class="perf" href="catalog/item/168784117593.html"><span class="slot"><img src="images/catalog/168784117593.jpg" alt="Scott #617 (MNH) 1925 1c Washington at Cambridge Lexington-Concord" loading="lazy"></span><span class="t">Scott #617 (MNH) 1925 1c Washington at Cambridge Lexington-Concord</span><span class="c">1901-40: Unused</span></a></li>
+      <li class="edged" data-ends="2026-10-20T22:47:10Z"><a class="perf" href="catalog/item/168784117648.html"><span class="slot"><img src="images/catalog/168784117648.jpg" alt="Scott #638 (MNH) 1927 6c James A. Garfield Rotary Press Single Paler Shade" loading="lazy"></span><span class="t">Scott #638 (MNH) 1927 6c James A. Garfield Rotary Press Single Paler Shade</span><span class="c">1901-40: Unused</span></a></li>
+      <li class="edged" data-ends="2026-10-20T22:47:10Z"><a class="perf" href="catalog/item/168784117652.html"><span class="slot"><img src="images/catalog/168784117652-e.jpg" alt="Scott #603 634d 670 728 (MH) US 4-Item Lot Booklet Pane Nebraska Unexpertised" loading="lazy"></span><span class="t">Scott #603 634d 670 728 (MH) US 4-Item Lot Booklet Pane Nebraska Unexpertised</span><span class="c">1901-40: Unused</span></a></li>
+      <li class="edged" data-ends="2026-10-20T22:47:10Z"><a class="perf" href="catalog/item/168784117671.html"><span class="slot"><img src="images/catalog/168784117671.jpg" alt="Scott #650 (MH) 1928 5c Aeronautics Conference Blue Top Margin Single" loading="lazy"></span><span class="t">Scott #650 (MH) 1928 5c Aeronautics Conference Blue Top Margin Single</span><span class="c">1901-40: Unused</span></a></li>
+      <li class="edged" data-ends="2026-10-20T22:47:11Z"><a class="perf" href="catalog/item/168784117702.html"><span class="slot"><img src="images/catalog/168784117702.jpg" alt="Scott #640 (MH) 1927 8c Olive Bister Grant Rotary Press" loading="lazy"></span><span class="t">Scott #640 (MH) 1927 8c Olive Bister Grant Rotary Press</span><span class="c">1901-40: Unused</span></a></li>
+      <li class="edged" data-ends="2026-10-20T22:47:11Z"><a class="perf" href="catalog/item/168784117711.html"><span class="slot"><img src="images/catalog/168784117711.jpg" alt="Scott #623 (MH) 1925 17c Woodrow Wilson Regular Issue Single" loading="lazy"></span><span class="t">Scott #623 (MH) 1925 17c Woodrow Wilson Regular Issue Single</span><span class="c">1901-40: Unused</span></a></li>
+      <li class="edged" data-ends="2026-10-20T22:47:12Z"><a class="perf" href="catalog/item/168784117738.html"><span class="slot"><img src="images/catalog/168784117738.jpg" alt="Scott #209 (Used) 1882 10c Brown Jefferson American Bank Note Re-Engraved" loading="lazy"></span><span class="t">Scott #209 (Used) 1882 10c Brown Jefferson American Bank Note Re-Engraved</span><span class="c">19th Century: Used</span></a></li>
+      <li class="edged" data-ends="2026-10-20T22:47:12Z"><a class="perf" href="catalog/item/168784117747.html"><span class="slot"><img src="images/catalog/168784117747.jpg" alt="Scott #633 (MNH) 1927 1-1/2c Yellow Brown Harding Strip of 3" loading="lazy"></span><span class="t">Scott #633 (MNH) 1927 1-1/2c Yellow Brown Harding Strip of 3</span><span class="c">1901-40: Unused</span></a></li>
+      <li class="edged" data-ends="2026-10-20T22:47:12Z" hidden><a class="perf" href="catalog/item/168784117753.html"><span class="slot"><img src="images/catalog/168784117753.jpg" alt="Scott #RJA105 (MNG) 1963 Narcotic Tax 1c imperf single" loading="lazy"></span><span class="t">Scott #RJA105 (MNG) 1963 Narcotic Tax 1c imperf single</span><span class="c">Revenues</span></a></li>
+      <li class="edged" data-ends="2026-10-20T22:47:13Z" hidden><a class="perf" href="catalog/item/168784117778.html"><span class="slot"><img src="images/catalog/168784117778.jpg" alt="Scott #Q5 (MNH) 1913 5c Parcel Post Mail Train Carmine Rose Perf 12" loading="lazy"></span><span class="t">Scott #Q5 (MNH) 1913 5c Parcel Post Mail Train Carmine Rose Perf 12</span><span class="c">Back of Book</span></a></li>
+      <li class="edged" data-ends="2026-10-20T22:47:13Z" hidden><a class="perf" href="catalog/item/168784117782.html"><span class="slot"><img src="images/catalog/168784117782.jpg" alt="Scott #319 320 321 322 323 324 325 (MNH) Philippines Palace of Legislature Set" loading="lazy"></span><span class="t">Scott #319 320 321 322 323 324 325 (MNH) Philippines Palace of Legislature Set</span><span class="c">U.S. Possessions</span></a></li>
+      <li class="edged" data-ends="2026-10-20T22:47:13Z" hidden><a class="perf" href="catalog/item/168784117789.html"><span class="slot"><img src="images/catalog/168784117789.jpg" alt="Scott #183 (MNG) 1879 2c Jackson Bank Note soft paper single" loading="lazy"></span><span class="t">Scott #183 (MNG) 1879 2c Jackson Bank Note soft paper single</span><span class="c">19th Century: Unused</span></a></li>
+      <li class="edged" data-ends="2026-10-20T22:47:13Z" hidden><a class="perf" href="catalog/item/168784117802.html"><span class="slot"><img src="images/catalog/168784117802.jpg" alt="Scott #267 (Used) 1897 2c on Cover Cadiz Ohio to Santa Barbara California" loading="lazy"></span><span class="t">Scott #267 (Used) 1897 2c on Cover Cadiz Ohio to Santa Barbara California</span><span class="c">Postal History</span></a></li>
+      <li class="edged" data-ends="2026-10-20T22:47:14Z" hidden><a class="perf" href="catalog/item/168784117840.html"><span class="slot"><img src="images/catalog/168784117840.jpg" alt="Scott #C10a (MNH) 1928 Lindbergh Air Mail 10c Booklet Single" loading="lazy"></span><span class="t">Scott #C10a (MNH) 1928 Lindbergh Air Mail 10c Booklet Single</span><span class="c">Air Mail</span></a></li>
+      <li class="edged" data-ends="2026-10-20T22:47:14Z" hidden><a class="perf" href="catalog/item/168784117850.html"><span class="slot"><img src="images/catalog/168784117850.jpg" alt="Scott #597 (Used) 1931 Omaha Air Races Cachet Cover 1c Franklin Coil" loading="lazy"></span><span class="t">Scott #597 (Used) 1931 Omaha Air Races Cachet Cover 1c Franklin Coil</span><span class="c">Event Covers</span></a></li>
+      <li class="edged" data-ends="2026-10-20T22:47:14Z" hidden><a class="perf" href="catalog/item/168784117852.html"><span class="slot"><img src="images/catalog/168784117852.jpg" alt="Scott #C10 (Used) 1928 Jackson Michigan Air Meet Cover to Chile CAM 17" loading="lazy"></span><span class="t">Scott #C10 (Used) 1928 Jackson Michigan Air Meet Cover to Chile CAM 17</span><span class="c">First Flight</span></a></li>
+      <li class="edged" data-ends="2026-10-20T22:47:15Z" hidden><a class="perf" href="catalog/item/168784117859.html"><span class="slot"><img src="images/catalog/168784117859.jpg" alt="Scott #15 (MNG) Ryukyu Islands 3.00 Pine Afforestation single" loading="lazy"></span><span class="t">Scott #15 (MNG) Ryukyu Islands 3.00 Pine Afforestation single</span><span class="c">U.S. Possessions</span></a></li>
+      <li class="edged" data-ends="2026-10-20T22:47:15Z" hidden><a class="perf" href="catalog/item/168784117896.html"><span class="slot"><img src="images/catalog/168784117896.jpg" alt="1912 (Used) 1c Franklin Price Compound Co Minneapolis Advertising Cover" loading="lazy"></span><span class="t">1912 (Used) 1c Franklin Price Compound Co Minneapolis Advertising Cover</span><span class="c">Postal History</span></a></li>
+      <li class="edged" data-ends="2026-10-20T22:47:16Z" hidden><a class="perf" href="catalog/item/168784117904.html"><span class="slot"><img src="images/catalog/168784117904.jpg" alt="Scott #638 (MNH) 1927 6c James A. Garfield Rotary Press Single Deeper Shade" loading="lazy"></span><span class="t">Scott #638 (MNH) 1927 6c James A. Garfield Rotary Press Single Deeper Shade</span><span class="c">1901-40: Unused</span></a></li>
+      <li class="edged" data-ends="2026-10-20T22:47:16Z" hidden><a class="perf" href="catalog/item/168784117908.html"><span class="slot"><img src="images/catalog/168784117908.jpg" alt="Scott #639 (MNH) 1927 7c William McKinley Rotary Press Regular Issue Single" loading="lazy"></span><span class="t">Scott #639 (MNH) 1927 7c William McKinley Rotary Press Regular Issue Single</span><span class="c">1901-40: Unused</span></a></li>
     </ul>
-    <p class="note">Sale prices are always current on eBay. A stamp shown here may have sold or come off sale since this page was made; if so, the full store has plenty more.</p>
+    <p class="note" id="ending-none" hidden>These auctions have ended since this page was made. <a href="https://www.ebay.com/str/stampedeusa?LH_Auction=1" target="stampede_ebay">See the auctions running now on eBay</a>.</p>
+    <p class="note">Time left and the current bid are always on eBay. Every card opens the stamp's own page, one click from its listing.</p>
   </section>
+  <!-- SALE-ENDING:END -->
 
   <!-- ===================== MORE WAYS TO SAVE ===================== -->
   <section class="block" id="save">
@@ -229,5 +248,18 @@
   </div>
 </footer>
 
+<script>
+/* The page is rebuilt once a day. Hide any auction that has ended since, and bring up a spare in its place. */
+(function () {
+  var list = document.getElementById('ending-cards');
+  if (!list) return;
+  var show = Number(list.getAttribute('data-show')) || 12, now = Date.now(), shown = 0;
+  Array.prototype.forEach.call(list.children, function (li) {
+    li.hidden = Date.parse(li.getAttribute('data-ends')) <= now || shown >= show;
+    if (!li.hidden) shown++;
+  });
+  document.getElementById('ending-none').hidden = shown > 0;
+})();
+</script>
 </body>
 </html>

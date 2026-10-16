@@ -99,6 +99,17 @@
   .dsr small { color: var(--soft); font-size: .95rem; margin-left: .3rem; }
   .dsr span { display: block; margin-top: .35rem; font-size: 1.02rem; }
 
+  /* Fresh on the shelf: perforated stamp cards with the stamp's photo (same as Home's Newly listed) */
+  .stamps { list-style: none; padding: 0; margin: 1.1rem 0 0; display: grid; gap: 1.1rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stamps li { display: flex; }
+  .stamps a { flex: 1; display: flex; flex-direction: column; gap: .6rem; padding: 1.15rem 1.1rem 1rem; text-decoration: none; color: var(--ink); }
+  .slot { position: relative; overflow: hidden; }
+  .slot img { display: block; width: 100%; height: 100%; object-fit: contain; }
+  .stamps .slot { height: 10rem; }
+  .stamps .t { font-family: var(--gothic); font-size: 1.3rem; line-height: 1.1; color: var(--head); }
+  .stamps .c { font-size: .9rem; color: var(--soft); margin-top: auto; }
+  .stamps a:hover .t { text-decoration: underline 1px; }
+
   /* What buyers mention: ruled rows with a count */
   .rows { list-style: none; padding: 0; margin: .6rem 0 0; max-width: 46rem; }
   .rows li { display: grid; grid-template-columns: 4.2rem 1fr; gap: .8rem; align-items: baseline; padding: .65rem 0; border-bottom: 1px solid var(--rule); }
@@ -123,7 +134,7 @@
   @media (min-width: 44rem) {
     .pane { padding: 16px 48px 16px 16px; }
     .pane .inscription { width: 48px; }
-    .dsr { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .dsr, .stamps { grid-template-columns: repeat(4, minmax(0, 1fr)); }
     .btn { display: inline-block; padding: .9rem 2.6rem; }
   }
 </style>
@@ -156,12 +167,12 @@
     <a class="btn" href="https://www.ebay.com/fdbk/feedback_profile/stampede_usa" target="stampede_ebay">Read every review on eBay</a>
 
     <ul class="pane" aria-label="Feedback ratings, last 12 months">
-      <li><div class="tile perf"><b>142</b><span>Positive</span></div></li>
+      <li><div class="tile perf"><b>145</b><span>Positive</span></div></li>
       <li><div class="tile perf"><b>0</b><span>Neutral</span></div></li>
       <li><div class="tile perf"><b>0</b><span>Negative</span></div></li>
       <li class="inscription" aria-hidden="true">Last 12 months</li>
     </ul>
-    <p class="asof">eBay feedback ratings for the last 12 months, as of October 11, 2026. eBay always shows the current count.</p>
+    <p class="asof">eBay feedback ratings for the last 12 months, as of October 16, 2026. eBay always shows the current count.</p>
   </section>
 
   <!-- ===================== DETAILED SELLER RATINGS ===================== -->
@@ -173,18 +184,32 @@
       <li class="edged"><div class="card perf"><b>5.0</b><small>out of 5</small><span>Shipping speed</span></div></li>
       <li class="edged"><div class="card perf"><b>5.0</b><small>out of 5</small><span>Communication</span></div></li>
     </ul>
-    <p class="note">eBay's average of the star ratings buyers gave us over the last 12 months, as of October 11, 2026.</p>
+    <p class="note">eBay's average of the star ratings buyers gave us over the last 12 months, as of October 16, 2026.</p>
   </section>
 
-  <!-- ===================== WHAT BUYERS MENTION (counted from the six newest reviews) ===================== -->
+  <!-- ===================== WHAT BUYERS MENTION (counted from the six reviews on the eBay store's Feedback tab) ===================== -->
   <section class="block" id="mentions">
     <h2>What buyers mention <a href="https://www.ebay.com/fdbk/feedback_profile/stampede_usa" target="stampede_ebay">Read them in their own words</a></h2>
-    <p class="note">We read our six most recent eBay reviews and counted what buyers brought up:</p>
+    <p class="note">We read the six reviews shown on our eBay store's Feedback tab and counted what buyers brought up:</p>
     <ul class="rows">
       <li><b>6 of 6</b><span>said the stamp arrived just as described</span></li>
       <li><b>6 of 6</b><span>praised the packing</span></li>
       <li><b>5 of 6</b><span>mentioned fast or on-time shipping</span></li>
       <li><b>3 of 6</b><span>called out our communication</span></li>
+    </ul>
+  </section>
+
+  <!-- ===================== FRESH ON THE SHELF: four newest stamps not shown on Home or About (rewritten by build.py every morning) ===================== -->
+  <section class="block" id="fresh">
+    <h2>Fresh on the shelf <a href="catalog/">Browse the catalog</a></h2>
+    <p class="note">Every stamp is offered exactly as shown in its photos. A few of the newest:</p>
+    <ul class="stamps">
+      <!-- FEEDBACK-FRESH:START (written by build.py: four of the newest listings that have a photo - do not edit by hand) -->
+      <li class="edged"><a class="perf" href="catalog/item/168795236404.html"><span class="slot"><img src="images/catalog/168795236404.jpg" alt="Scott #147 US 1870 3c Washington Green National Bank Note No Grill Perf 12 Used" loading="lazy"></span><span class="t">Scott #147 US 1870 3c Washington Green National Bank Note No Grill Perf 12 Used</span><span class="c">19th Century: Used</span></a></li>
+      <li class="edged"><a class="perf" href="catalog/item/168795125639.html"><span class="slot"><img src="images/catalog/168795125639.jpg" alt="Scott #1452 1463 1474 (MNH) 1972 Wolf Trap PTA Stamp Collecting 5 Full Sheets" loading="lazy"></span><span class="t">Scott #1452 1463 1474 (MNH) 1972 Wolf Trap PTA Stamp Collecting 5 Full Sheets</span><span class="c">Sheets</span></a></li>
+      <li class="edged"><a class="perf" href="catalog/item/168795125606.html"><span class="slot"><img src="images/catalog/168795125606.jpg" alt="Scott #1755 Jimmie Rodgers Singing Brakeman 1978 13c Sheet of 50 MNH Country" loading="lazy"></span><span class="t">Scott #1755 Jimmie Rodgers Singing Brakeman 1978 13c Sheet of 50 MNH Country</span><span class="c">Sheets</span></a></li>
+      <li class="edged"><a class="perf" href="catalog/item/168795125543.html"><span class="slot"><img src="images/catalog/168795125543.jpg" alt="Scott #1552 1974 Peace on Earth Christmas Precancel Self-Adhesive MNH 4 Panes 50" loading="lazy"></span><span class="t">Scott #1552 1974 Peace on Earth Christmas Precancel Self-Adhesive MNH 4 Panes 50</span><span class="c">Sheets</span></a></li>
+      <!-- FEEDBACK-FRESH:END -->
     </ul>
   </section>
 
