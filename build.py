@@ -170,11 +170,45 @@ FOOT = f"""</main>
 
 
 SCOTT = re.compile(r"Scott #\s*([A-Za-z]{0,3}\d+[A-Za-z]?)")
+SOF = {0xC0, 0xC1, 0xC2, 0xC3, 0xC5, 0xC6, 0xC7, 0xC9, 0xCA, 0xCB, 0xCD, 0xCE, 0xCF}
 
 
-def picture(item, imgs, title, category, cls):
+def image_size(path):
+    """(width, height) from a JPEG's own frame header, standard library only; None if it can't be read.
+    The item page's main photo carries these so the browser keeps its space before the photo arrives (W10, 2026-10-17)."""
+    try:
+        with open(path, "rb") as f:
+            data = f.read()
+    except OSError:
+        return None
+    if data[:2] != b"\xff\xd8":
+        return None
+    i = 2
+    while i + 9 < len(data):
+        if data[i] != 0xFF:
+            return None
+        marker = data[i + 1]
+        if marker == 0xFF:                                   # fill byte before a marker
+            i += 1
+            continue
+        if marker == 0x01 or 0xD0 <= marker <= 0xD8:         # markers with no length field
+            i += 2
+            continue
+        if marker in SOF:
+            h, w = int.from_bytes(data[i + 5:i + 7], "big"), int.from_bytes(data[i + 7:i + 9], "big")
+            return (w, h) if w and h else None
+        i += 2 + int.from_bytes(data[i + 2:i + 4], "big")
+    return None
+
+
+def picture(item, imgs, title, category, cls, main=False):
     """The scan when we have one; otherwise a text card naming the stamp from its own title (its first Scott number),
-    or its category - never anything the title doesn't say."""
+    or its category - never anything the title doesn't say. main=True is the item page's own photo: it loads at once
+    (it is the biggest thing on the page) and carries its width and height so nothing jumps when it arrives (W10)."""
+    if item in imgs and main:
+        size = image_size(os.path.join(HERE, imgs[item]))
+        dims = f' width="{size[0]}" height="{size[1]}"' if size else ""
+        return f'<span class="{cls[0]}"><img src="/{esc(imgs[item])}" alt="{esc(title)}"{dims} fetchpriority="high"></span>'
     if item in imgs:
         return f'<span class="{cls[0]}"><img src="/{esc(imgs[item])}" alt="{esc(title)}" loading="lazy"></span>'
     m = SCOTT.search(title)
@@ -286,8 +320,8 @@ def build_item(r, rows_by_cat, imgs):
     out = head(f"{title} | StampedeUSA", desc, f"{SITE}/catalog/item/{item}.html", image)
     out += f"""  <p class="crumbs"><a href="/catalog/">Catalog</a> &rsaquo; <a href="/catalog/?cat={esc(slug(r['category']))}">{esc(r['category'])}</a></p>
   <div class="item">
-    <div class="item-stamp perf edged"><div class="frame">{picture(item, imgs, title, r['category'], ("ph", "tx"))}</div></div>
-    <div>
+    <div class="item-stamp perf edged"><div class="frame">{picture(item, imgs, title, r['category'], ("ph", "tx"), main=True)}</div></div>
+    <div class="buy">
       <h1>{esc(title)}</h1>
       <ul class="facts">
         <li><b>Category</b><span>{esc(r['category'])}</span></li>

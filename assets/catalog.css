@@ -89,13 +89,16 @@ main { display: block; max-width: 72rem; margin: 0 auto; padding: 1.5rem 1rem 3r
 .badge { align-self: flex-start; font-size: .78rem; letter-spacing: .04em; text-transform: uppercase; color: var(--head);
   border: 1.5px solid currentColor; padding: .05rem .45rem; border-radius: 2px; }
 
-/* Item page */
-.crumbs { font-size: .95rem; color: var(--soft); margin: 0 0 1.2rem; }
+/* Item page. Phones first (W10, 2026-10-17): a shorter photo and the "See it on eBay" button straight under the title,
+   so the title and the button show without scrolling; the 44rem block below restores the wide layout. */
+.crumbs { font-size: .95rem; color: var(--soft); margin: 0 0 .8rem; }
 .crumbs a { color: var(--soft); }
-.item { display: grid; gap: 1.6rem; align-items: start; }
-.item-stamp { --r: 7px; padding: 1.4rem; }
-.item-stamp .frame { border: 2px solid var(--purple); padding: 1rem; display: flex; align-items: center; justify-content: center; min-height: 14rem; }
-.item-stamp img { display: block; max-width: 100%; max-height: 70vh; height: auto; object-fit: contain; }
+.item { display: grid; gap: 1rem; align-items: start; }
+.item-stamp { --r: 7px; padding: .9rem; }
+.item-stamp .frame { border: 2px solid var(--purple); padding: .6rem; display: flex; align-items: center; justify-content: center; min-height: 12rem; }
+.item-stamp img { display: block; max-width: 100%; max-height: 36vh; height: auto; object-fit: contain; }
+.buy { display: flex; flex-direction: column; }
+.buy .facts { order: 1; }
 .item-stamp .tx { font-family: var(--gothic); font-size: 2rem; line-height: 1.05; color: var(--soft); text-align: center; padding: 1rem; }
 @media (prefers-color-scheme: dark) { .item-stamp .frame { border-color: var(--lilac); } }
 .item h1 { font-size: clamp(2rem, 6vw, 3rem); line-height: 1.04; }
@@ -124,6 +127,11 @@ footer.selvage { margin-top: 2rem; }
 
 @media (min-width: 44rem) {
   .find { grid-template-columns: 2fr 1fr 1fr; align-items: end; }
-  .item { grid-template-columns: 1fr 1fr; }
+  .item { grid-template-columns: 1fr 1fr; gap: 1.6rem; }
+  .crumbs { margin-bottom: 1.2rem; }
+  .item-stamp { padding: 1.4rem; }
+  .item-stamp .frame { padding: 1rem; min-height: 14rem; }
+  .item-stamp img { max-height: 70vh; }
+  .buy { display: block; }
   .btn { display: inline-block; padding: 1rem 2.8rem; }
 }

@@ -98,6 +98,50 @@ class BuildTests(unittest.TestCase):
                 path = path + "index.html" if path.endswith("/") else path
                 self.assertTrue(os.path.exists(os.path.join(ROOT, path)), f"{name} -> {ref}")
 
+    def test_item_main_photo_loads_at_once_with_its_size(self):
+        # W10 (2026-10-17): the item page's own photo is the biggest thing on the page - no lazy load, real width/height
+        checked = 0
+        for r in self.rows:
+            if r["item"] not in self.imgs:
+                continue
+            text = open(os.path.join(ROOT, "catalog", "item", f"{r['item']}.html"), encoding="utf-8").read()
+            main = re.search(r'<div class="item-stamp[^"]*"><div class="frame"><span class="ph">(<img [^>]+>)', text)
+            self.assertIsNotNone(main, r["item"])
+            tag = main.group(1)
+            self.assertNotIn('loading="lazy"', tag, r["item"])
+            self.assertIn('fetchpriority="high"', tag, r["item"])
+            size = re.search(r'width="(\d+)" height="(\d+)"', tag)
+            self.assertIsNotNone(size, r["item"])
+            self.assertEqual(tuple(map(int, size.groups())), build.image_size(os.path.join(ROOT, self.imgs[r["item"]])), r["item"])
+            checked += 1
+        self.assertGreater(checked, 0)
+
+    def test_image_size_reads_jpeg_headers(self):
+        seg = lambda m, body: b"\xff" + bytes([m]) + (len(body) + 2).to_bytes(2, "big") + body
+        sof = lambda m, w, h: seg(m, b"\x08" + h.to_bytes(2, "big") + w.to_bytes(2, "big") + b"\x03" + b"\x00" * 9)
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            cases = {"baseline": (b"\xff\xd8" + seg(0xE0, b"JFIF\x00" + b"\x00" * 9) + sof(0xC0, 1600, 1400), (1600, 1400)),
+                     "progressive": (b"\xff\xd8" + seg(0xE1, b"Exif\x00\x00" + b"\x00" * 40) + sof(0xC2, 640, 480), (640, 480)),
+                     "not a jpeg": (b"\x89PNG\r\n\x1a\n" + b"\x00" * 40, None)}
+            for name, (data, want) in cases.items():
+                p = os.path.join(d, name + ".jpg")
+                with open(p, "wb") as f:
+                    f.write(data)
+                self.assertEqual(build.image_size(p), want, name)
+            self.assertIsNone(build.image_size(os.path.join(d, "missing.jpg")))
+
+    def test_item_buy_column_has_one_ebay_button(self):
+        # W10: the button lives in the "buy" column; on phones the CSS shows it straight under the title
+        for r in self.rows:
+            text = open(os.path.join(ROOT, "catalog", "item", f"{r['item']}.html"), encoding="utf-8").read()
+            col = text[text.index('<div class="buy">'):text.index("</div>", text.index('<div class="buy">'))]
+            self.assertEqual(col.count('class="btn"'), 1, r["item"])
+            self.assertIn(f'href="https://www.ebay.com/itm/{r["item"]}" target="stampede_ebay"', col, r["item"])
+        css = open(os.path.join(ROOT, "assets", "catalog.css"), encoding="utf-8").read()
+        self.assertIn(".buy .facts { order: 1; }", css)
+        self.assertIn(".buy { display: block; }", css)
+
     def test_canonicals_unique(self):
         seen = {}
         for p in pages():
