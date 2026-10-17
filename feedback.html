@@ -95,6 +95,7 @@
   .dsr { list-style: none; padding: 0; margin: 1.1rem 0 0; display: grid; gap: 1.1rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .dsr li { display: flex; }
   .dsr .card { flex: 1; padding: 1.2rem 1.1rem 1rem; }
+  @media (max-width: 23rem) { .dsr { grid-template-columns: minmax(0, 1fr); } } /* "Communication" needs 156 px: one column below 368 px (W11) */
   .dsr b { font-family: var(--gothic); font-weight: 400; font-size: clamp(2.4rem, 8vw, 3.2rem); line-height: 1; color: var(--head); }
   .dsr small { color: var(--soft); font-size: .95rem; margin-left: .3rem; }
   .dsr span { display: block; margin-top: .35rem; font-size: 1.02rem; }

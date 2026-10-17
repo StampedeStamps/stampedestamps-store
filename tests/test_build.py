@@ -142,6 +142,13 @@ class BuildTests(unittest.TestCase):
         self.assertIn(".buy .facts { order: 1; }", css)
         self.assertIn(".buy { display: block; }", css)
 
+    def test_narrow_phones_do_not_scroll_sideways(self):
+        # W11 (2026-10-17): at 320-360 px Home's hero column must be allowed to shrink below the search bar's natural
+        # width, and Feedback's four rating cards stack in one column below 368 px ("Communication" needs 156 px)
+        home, fb = read("index.html"), read("feedback.html")
+        self.assertIn(".hero-row { display: grid; gap: 1.5rem; align-items: center; grid-template-columns: minmax(0, 1fr); }", home)
+        self.assertIn("@media (max-width: 23rem) { .dsr { grid-template-columns: minmax(0, 1fr); } }", fb)
+
     def test_canonicals_unique(self):
         seen = {}
         for p in pages():
