@@ -68,7 +68,7 @@
   .edged { filter: drop-shadow(0 0 1px var(--edge)); }
 
   /* ---------- Hero ---------- */
-  .hero-row { display: grid; gap: 1.5rem; align-items: center; }
+  .hero-row { display: grid; gap: 1.5rem; align-items: center; grid-template-columns: minmax(0, 1fr); } /* the column may shrink below the search bar's natural width, so 320-360 px phones get no sideways scroll (W11) */
   .hero h1 { font-size: clamp(2.6rem, 9vw, 4.4rem); }
   .hero .lede { font-size: 1.15rem; max-width: 40rem; margin: .6rem 0 1.25rem; }
   .verse { font-style: italic; color: var(--soft); margin: 0 0 1.25rem; }
@@ -76,7 +76,7 @@
   .hero-photo .frame { border: 2px solid var(--purple); aspect-ratio: 624 / 535; } /* matches images/hero.jpg, the StampedeUSA logo */
   /* Until images/hero.jpg is uploaded, hide the empty hero frame instead of showing its placeholder */
   .hero-photo:has(.slot.missing) { display: none; }
-  .hero-row:has(.slot.missing) { grid-template-columns: 1fr; }
+  .hero-row:has(.slot.missing) { grid-template-columns: minmax(0, 1fr); }
 
   /* ---------- Photo slots: a dashed box shows until the photo is uploaded ---------- */
   .slot { position: relative; overflow: hidden; }
