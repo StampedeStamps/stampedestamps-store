@@ -1,5 +1,5 @@
 """Checks for build.py (run: python -m unittest discover -s tests). Douglas 2026-10-11: no prices, one catalog."""
-import csv, datetime, hashlib, html, os, re, subprocess, sys, unittest
+import csv, datetime, hashlib, html, json, os, re, subprocess, sys, unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
@@ -52,6 +52,21 @@ def item_of(img):
     return re.match(r"images/catalog/(\d+)", img).group(1)
 
 
+def ld_blocks(text):
+    return re.findall(r'<script type="application/ld\+json">(.*?)</script>', text, re.S)
+
+
+def walk(x, parent=None):
+    """Every (key, value, the dict holding it) in parsed JSON."""
+    if isinstance(x, dict):
+        for k, v in x.items():
+            yield k, v, x
+            yield from walk(v, x)
+    elif isinstance(x, list):
+        for v in x:
+            yield from walk(v, parent)
+
+
 class BuildTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -60,8 +75,9 @@ class BuildTests(unittest.TestCase):
         cls.rows = rows()
         cls.imgs = build.load()[1]
         # titles appear as written AND lower-cased in the cards' data-t search attribute; both are verbatim titles
-        cls.titles = sorted({html.escape(t, quote=True) for r in cls.rows for t in (r["title"], r["title"].lower())},
-                            key=len, reverse=True)
+        # ... and as written inside the catalog's JSON-LD list (W6)
+        cls.titles = sorted({html.escape(t, quote=True) for r in cls.rows for t in (r["title"], r["title"].lower())} |
+                            {build.ld_json(r["title"])[1:-1] for r in cls.rows}, key=len, reverse=True)
 
     def test_one_page_per_listing(self):
         items = os.listdir(os.path.join(ROOT, "catalog", "item"))
@@ -372,6 +388,60 @@ class BuildTests(unittest.TestCase):
         self.assertIn("params.get('kind')", index)
         self.assertIn("params.get('fmt')", index)
         self.assertIn('<option value="Auction">Auction</option>', index)
+
+    def test_hand_written_pages_have_canonical_share_image_and_icon(self):
+        # W6 (2026-10-17): one canonical matching the sitemap, a share image and an icon (so no /favicon.ico 404), and the
+        # brand font from our own copy only (W9: the cross-site second source is gone)
+        sitemap = read("sitemap.xml")
+        for name in build.PAGES:
+            t = read(name)
+            h = t[:t.index("</head>")]
+            want = f"{build.SITE}/" if name == "index.html" else f"{build.SITE}/{name}"
+            self.assertEqual(re.findall(r'<link rel="canonical" href="([^"]+)">', h), [want], name)
+            self.assertIn(f"<loc>{want}</loc>", sitemap, name)
+            self.assertEqual(len(re.findall(r'<meta property="og:image" content="https://www\.stampedestamps\.store/images/[^"]+">', h)), 1, name)
+            self.assertEqual(re.findall(r'<link rel="icon" href="([^"]+)">', h), ["images/hero.jpg"], name)
+            self.assertNotIn("stampedestamps.github.io/stampede-stories/assets/fonts", t, name)
+            desc = re.search(r'<meta name="description" content="([^"]*)">', h).group(1)
+            self.assertEqual(re.search(r'<meta property="og:description" content="([^"]*)">', h).group(1), desc, name)
+            if name == "feedback.html":   # hard rule 12: no undated trust number in the search snippet
+                self.assertNotIn("%", desc)
+
+    def test_structured_data_parses_and_never_carries_a_price(self):
+        # W6: JSON-LD on Home (OnlineStore) and the catalog (ItemList) only; hard rule 1 - no price, offer or rating, ever
+        titles = {r["title"] for r in self.rows}
+        found = []
+        for name in build.PAGES + ["catalog/index.html"]:
+            for blk in ld_blocks(read(name)):
+                data = json.loads(blk)
+                found.append((name, data["@type"]))
+                for k, v, holder in walk(data):
+                    self.assertIsNone(re.search(r"(?i)price|offer|rating", k), f"{name}: {k}")
+                    if isinstance(v, str) and not (k == "name" and holder.get("@type") == "ListItem"):
+                        self.assertNotIn("$", v, f"{name}: {k}")
+                    if k == "name" and holder.get("@type") == "ListItem":
+                        self.assertIn(v, titles, name)   # a title as written: its face value is the only "$"
+        self.assertEqual(found, [("index.html", "OnlineStore"), ("catalog/index.html", "ItemList")])
+        home = json.loads(ld_blocks(read("index.html"))[0])
+        self.assertEqual(home["url"], f"{build.SITE}/")
+        self.assertIn(build.STORE, home["sameAs"])
+        for p in pages()[1:]:
+            self.assertNotIn("application/ld+json", open(p, encoding="utf-8").read(), os.path.basename(p))
+
+    def test_catalog_item_list_is_its_cards_in_order(self):
+        # W6: one ListItem per card, in card order; each url an item page that exists, each name the card's title
+        index = read("catalog/index.html")
+        lists = [d for d in map(json.loads, ld_blocks(index)) if d.get("@type") == "ItemList"]
+        self.assertEqual(len(lists), 1)
+        els = lists[0]["itemListElement"]
+        cards = re.findall(r'<a class="card perf" href="/catalog/item/(\d+)\.html">.*?<span class="t">([^<]*)</span>', index)
+        self.assertGreater(len(cards), 0)
+        self.assertEqual(lists[0]["numberOfItems"], len(cards))
+        self.assertEqual([e["position"] for e in els], list(range(1, len(cards) + 1)))
+        self.assertEqual([e["url"] for e in els], [f"{build.SITE}/catalog/item/{i}.html" for i, _ in cards])
+        self.assertEqual([e["name"] for e in els], [html.unescape(x) for _, x in cards])
+        for e in els:
+            self.assertTrue(os.path.exists(os.path.join(ROOT, "catalog", "item", e["url"].rsplit("/", 1)[1])), e["url"])
 
 
 if __name__ == "__main__":

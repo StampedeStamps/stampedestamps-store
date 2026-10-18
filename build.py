@@ -116,7 +116,7 @@ def kinds_of(group):
     return [k for k, _, test in KINDS if any(test(r) for r in group)]
 
 
-def head(title, desc, canonical, image):
+def head(title, desc, canonical, image, extra=""):
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -135,7 +135,7 @@ def head(title, desc, canonical, image):
 <meta name="theme-color" content="#4B006E">
 <link rel="icon" href="/images/hero.jpg">
 <link rel="stylesheet" href="/assets/catalog.css">
-</head>
+{extra}</head>
 <body>
 <a class="skip" href="#main">Skip to the stamps</a>
 <header class="selvage">
@@ -271,6 +271,21 @@ SCRIPT = """<script>
 """
 
 
+def ld_json(data):
+    """JSON for a <script type="application/ld+json"> block: "<" escaped so no title can close the script."""
+    return json.dumps(data, ensure_ascii=False, separators=(",", ":")).replace("<", "\\u003c")
+
+
+def item_list_ld(groups):
+    """W6 (2026-10-17): the catalog's cards as schema.org ItemList, in card order: each card's own page and its title
+    as written. Never a price, an offer or a rating (hard rule 1); search engines read the price on eBay."""
+    data = {"@context": "https://schema.org", "@type": "ItemList", "name": "The StampedeUSA catalog",
+            "numberOfItems": len(groups),
+            "itemListElement": [{"@type": "ListItem", "position": i, "url": f"{SITE}/catalog/item/{g[0]['item']}.html",
+                                 "name": g[0]["title"]} for i, g in enumerate(groups, 1)]}
+    return f'<script type="application/ld+json">{ld_json(data)}</script>\n'
+
+
 def build_index(rows, imgs, meta):
     groups = {}
     for r in rows:
@@ -286,7 +301,7 @@ def build_index(rows, imgs, meta):
     n = len(rows)
     out = head(f"The catalog: {n} stamps | StampedeUSA",
                f"Browse all {n} StampedeUSA listings: U.S. sheets, panes, singles, covers, revenues and worldwide stamps. "
-               "Every one opens on eBay.", f"{SITE}/catalog/", "images/hero.jpg")
+               "Every one opens on eBay.", f"{SITE}/catalog/", "images/hero.jpg", item_list_ld(ordered))
     out += f"""  <section class="hero">
     <h1>The whole shelf, one page.</h1>
     <p class="lede">All {n} StampedeUSA listings in one place. Search by Scott number, year, country or subject, or narrow it by
