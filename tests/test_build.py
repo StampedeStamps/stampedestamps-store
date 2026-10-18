@@ -149,6 +149,20 @@ class BuildTests(unittest.TestCase):
         self.assertIn(".hero-row { display: grid; gap: 1.5rem; align-items: center; grid-template-columns: minmax(0, 1fr); }", home)
         self.assertIn("@media (max-width: 23rem) { .dsr { grid-template-columns: minmax(0, 1fr); } }", fb)
 
+    def test_trust_numbers_are_dated_and_match_the_feedback_page(self):
+        # W5 (Douglas 2026-10-17, hard rule 12): Home and About show only the Feedback page's dated eBay numbers,
+        # with the same "as of" date and a link to the eBay feedback page; undated claims stay off
+        fb = read("feedback.html")
+        pos = re.search(r"<b>(\d+)</b><span>Positive</span>", fb).group(1)
+        asof = re.search(r"last 12 months, as of ([A-Z][a-z]+ \d{1,2}, \d{4})", fb).group(1)
+        for name in ("index.html", "about.html"):
+            t = read(name)
+            self.assertIn(f"<b>{pos}</b>", t, name)
+            self.assertIn(f"eBay feedback ratings for the last 12 months, as of {asof}.", t, name)
+            self.assertIn('href="https://www.ebay.com/fdbk/feedback_profile/stampede_usa" target="stampede_ebay"', t, name)
+            for gone in ("248+", "Top Rated", "find value", "100%</b>"):
+                self.assertNotIn(gone, t, f"{name} still shows {gone}")
+
     def test_canonicals_unique(self):
         seen = {}
         for p in pages():
