@@ -227,7 +227,9 @@ def card(group, imgs):
     if len(group) > 1:
         links = ", ".join(f'<a href="/catalog/item/{esc(g["item"])}.html">Listing {i}</a>' for i, g in enumerate(group, 1))
         more = f'<span class="more">{len(group)} listings with this title: {links}</span>'
+    auctions = sum(1 for g in group if g["format"] == "AUCTION")   # the counter counts listings, not cards (W13)
     return (f'<li class="edged" data-t="{esc(title.lower())}" data-c="{esc(slug(cats))}" data-f="{esc(fmts)}" '
+            f'data-n="{len(group)}" data-na="{auctions}" '
             f'data-k="{" ".join(kinds_of(group))}">'
             f'<a class="card perf" href="/catalog/item/{esc(item)}.html">'
             f'{picture(item, imgs, title, cats, ("ph", "tx"))}'
@@ -240,6 +242,7 @@ SCRIPT = """<script>
   var q = document.getElementById('q'), c = document.getElementById('cat'), f = document.getElementById('fmt');
   var items = Array.prototype.slice.call(document.querySelectorAll('#cards > li'));
   var count = document.getElementById('count'), empty = document.getElementById('empty');
+  var total = items.reduce(function (s, li) { return s + +li.dataset.n; }, 0);   // listings, not cards (W13)
   var params = new URLSearchParams(location.search);
   if (params.get('cat')) c.value = params.get('cat');
   if (params.get('kind')) c.value = 'kind:' + params.get('kind');
@@ -257,9 +260,10 @@ SCRIPT = """<script>
     items.forEach(function (li) {
       var ok = inCat(li) && (!f.value || li.dataset.f.indexOf(f.value) !== -1) &&
                words.every(function (w) { return li.dataset.t.indexOf(w) !== -1; });
-      li.hidden = !ok; if (ok) shown++;
+      li.hidden = !ok;
+      if (ok) shown += f.value === 'Auction' ? +li.dataset.na : f.value ? li.dataset.n - li.dataset.na : +li.dataset.n;
     });
-    count.textContent = 'Showing ' + shown + ' of ' + items.length;
+    count.textContent = 'Showing ' + shown + ' of ' + total + ' listings';
     empty.hidden = shown !== 0;
   }
   [q, c, f].forEach(function (el) { el.addEventListener('input', run); el.addEventListener('change', run); });
@@ -284,7 +288,7 @@ def build_index(rows, imgs, meta):
     kind_n = [(k, label, sum(1 for r in rows if test(r))) for k, label, test in KINDS]
     kind_opts = "".join(f'<option value="kind:{k}">{esc(label)} ({n})</option>' for k, label, n in kind_n if n)
     n = len(rows)
-    out = head(f"The catalog: {n} stamps | StampedeUSA",
+    out = head(f"The catalog: {n} listings | StampedeUSA",
                f"Browse all {n} StampedeUSA listings: U.S. sheets, panes, singles, covers, revenues and worldwide stamps. "
                "Every one opens on eBay.", f"{SITE}/catalog/", "images/hero.jpg")
     out += f"""  <section class="hero">
@@ -298,7 +302,7 @@ def build_index(rows, imgs, meta):
       <div><label for="fmt">Buying format</label><select id="fmt"><option value="">Auction or Buy It Now</option>
         <option value="Auction">Auction</option><option value="Buy It Now">Buy It Now</option></select></div>
     </form>
-    <p class="count" id="count" aria-live="polite">Showing {len(ordered)} of {len(ordered)}</p>
+    <p class="count" id="count" aria-live="polite">Showing {n} of {n} listings</p>
     <div class="empty" id="empty" hidden><p>No stamps match that search.</p>
       <p><button type="button" id="clear">Clear the search and filters</button>, or <a href="{STORE}" target="stampede_ebay">search the eBay store</a>.</p></div>
   </section>
@@ -442,7 +446,7 @@ def update_home_sheet(rows, imgs, avoid=()):
         n, r = counts[c], face[c]
         items.append(f'<li><a class="tile perf" href="catalog/?cat={esc(slug(c))}">'
                      f'<span class="pic"><img src="{esc(imgs[r["item"]])}" alt="{esc(r["title"])}" loading="lazy"></span>'
-                     f'<b>{esc(FRIENDLY.get(c, c))}</b><span>{n} {"stamp" if n == 1 else "stamps"}</span></a></li>')
+                     f'<b>{esc(FRIENDLY.get(c, c))}</b><span>{n} {"listing" if n == 1 else "listings"}</span></a></li>')
     replace_block(os.path.join(HERE, "index.html"), SHEET_START, SHEET_END, items)
     return cats, {face[c]["item"] for c in cats}
 

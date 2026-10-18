@@ -55,6 +55,9 @@
   .menu a { font-size: .98rem; text-decoration: none; padding: .15rem 0; border-bottom: 2px solid transparent; }
   .menu a:hover { border-bottom-color: var(--lilac); }
   .menu a[aria-current="page"] { border-bottom-color: #fff; }
+  /* menu links at least 24 px tall (WCAG 2.2 target size): 32 px, and 43 px on phones (W13) */
+  .menu a { display: inline-block; }
+  @media (max-width: 43.99rem) { .top { row-gap: 0; } .menu ul { gap: 0 .9rem; } .menu a { padding: .7rem 0 .3rem; } }
 
   /* ---------- Perforated stamp edge (same trick as Stamp Stories) ---------- */
   .perf { position: relative; isolation: isolate; --r: 5px; }
