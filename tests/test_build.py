@@ -48,8 +48,12 @@ def block(text, start):
     return text[text.index(f"<!-- {start}:START"):text.index(f"<!-- {start}:END -->")]
 
 
+# a card shows the full photo (images/catalog) or its small copy (images/thumbs, W2 2026-10-17); same file name
+CARD_IMG = r"images/(?:catalog|thumbs)/\d+(?:-e)?\.jpg"
+
+
 def item_of(img):
-    return re.match(r"images/catalog/(\d+)", img).group(1)
+    return re.match(r"images/(?:catalog|thumbs)/(\d+)", img).group(1)
 
 
 class BuildTests(unittest.TestCase):
@@ -163,6 +167,64 @@ class BuildTests(unittest.TestCase):
             for gone in ("248+", "Top Rated", "find value", "100%</b>"):
                 self.assertNotIn(gone, t, f"{name} still shows {gone}")
 
+    def test_cards_show_the_small_copy_and_item_pages_keep_the_full_photo(self):
+        # W2 (2026-10-17): every card shows the small copy when the photo step has made one no older than the photo;
+        # the item page's own photo and its og:image stay the full photo
+        cards = re.findall(r'href="/catalog/item/(\d+)\.html"><span class="ph"><img src="/([^"]+)"', read("catalog/index.html"))
+        self.assertTrue(cards)
+        for item, src in cards:
+            self.assertEqual(src, build.card_img(item, self.imgs), item)
+            self.assertRegex(src, "^" + CARD_IMG + "$", item)
+            self.assertTrue(os.path.exists(os.path.join(ROOT, src)), src)
+        for r in self.rows:
+            if r["item"] not in self.imgs:
+                continue
+            text = open(os.path.join(ROOT, "catalog", "item", f"{r['item']}.html"), encoding="utf-8").read()
+            full = self.imgs[r["item"]]
+            self.assertIn(f'<div class="frame"><span class="ph"><img src="/{full}"', text, r["item"])
+            self.assertIn(f'<meta property="og:image" content="{build.SITE}/{full}">', text, r["item"])
+        for name, start in (("index.html", "NEWLY-LISTED"), ("index.html", "CATEGORY-SHEET"), ("about.html", "ABOUT-KINDS"),
+                            ("feedback.html", "FEEDBACK-FRESH"), ("sale.html", "SALE-ENDING")):
+            for item, src in re.findall(r'href="catalog/(?:item/(\d+)\.html|\?[^"]*)"><span class="(?:slot|pic)"><img src="([^"]+)"',
+                                        block(read(name), start)):
+                self.assertRegex(src, "^" + CARD_IMG + "$", f"{name} {start}")
+                if item:
+                    self.assertEqual(src, build.card_img(item, self.imgs), f"{name} {item}")
+
+    def test_card_img_never_shows_an_older_copy(self):
+        import tempfile
+        here = build.HERE
+        with tempfile.TemporaryDirectory() as d:
+            try:
+                build.HERE = d
+                os.makedirs(os.path.join(d, "images", "catalog"))
+                os.makedirs(os.path.join(d, *build.THUMB_DIR.split("/")))
+                full = os.path.join(d, "images", "catalog", "1.jpg")
+                small = os.path.join(d, *build.THUMB_DIR.split("/"), "1.jpg")
+                for f in (full, small):
+                    with open(f, "wb") as fh:
+                        fh.write(b"x")
+                imgs = {"1": "images/catalog/1.jpg", "2": "images/catalog/2.jpg"}
+                os.utime(full, (1000, 1000))
+                os.utime(small, (2000, 2000))
+                self.assertEqual(build.card_img("1", imgs), build.THUMB_DIR + "/1.jpg")
+                os.utime(small, (500, 500))            # the photo changed after its copy was made: show the photo
+                self.assertEqual(build.card_img("1", imgs), "images/catalog/1.jpg")
+                self.assertEqual(build.card_img("2", imgs), "images/catalog/2.jpg")    # no copy yet
+            finally:
+                build.HERE = here
+
+    def test_small_copies_only_for_current_photos(self):
+        # W2: build.py deletes the small copy of a photo that is gone, so sold listings leave nothing behind
+        d = os.path.join(ROOT, *build.THUMB_DIR.split("/"))
+        if os.path.isdir(d):
+            keep = {os.path.basename(p) for p in self.imgs.values()}
+            self.assertEqual(sorted(set(os.listdir(d)) - keep), [])
+
+    def test_thumb_dir_line_is_where_the_photo_step_looks(self):
+        # the private photo step on OMEN (make_card_thumbs.py) makes the small copies only when it finds this exact line
+        self.assertRegex(read("build.py"), r'(?m)^THUMB_DIR = "images/thumbs"\r?$')
+
     def test_canonicals_unique(self):
         seen = {}
         for p in pages():
@@ -193,7 +255,7 @@ class BuildTests(unittest.TestCase):
         home = open(os.path.join(ROOT, "index.html"), encoding="utf-8").read()
         block = home[home.index("<!-- CATEGORY-SHEET:START"):home.index("<!-- CATEGORY-SHEET:END -->")]
         cats = re.findall(r'href="catalog/\?cat=([a-z0-9-]+)"', block)
-        imgs = re.findall(r'src="(images/catalog/\d+(?:-e)?\.jpg)"', block)
+        imgs = re.findall(r'src="(images/(?:catalog|thumbs)/\d+(?:-e)?\.jpg)"', block)
         index = open(os.path.join(ROOT, "catalog", "index.html"), encoding="utf-8").read()
         live = set(re.findall(r'data-c="([a-z0-9-]+)"', index))
         self.assertEqual(len(cats), 8, "Home category sheet must have eight tiles")
@@ -208,7 +270,7 @@ class BuildTests(unittest.TestCase):
         home = open(os.path.join(ROOT, "index.html"), encoding="utf-8").read()
         block = home[home.index("<!-- NEWLY-LISTED:START"):home.index("<!-- NEWLY-LISTED:END -->")]
         items = re.findall(r'href="catalog/item/(\d+)\.html"', block)
-        imgs = re.findall(r'src="(images/catalog/\d+(?:-e)?\.jpg)"', block)
+        imgs = re.findall(r'src="(images/(?:catalog|thumbs)/\d+(?:-e)?\.jpg)"', block)
         self.assertEqual(len(items), 12, "Home must show twelve newly listed cards")
         self.assertEqual(len(set(items)), 12)
         live = {r["item"] for r in self.rows}
@@ -234,7 +296,7 @@ class BuildTests(unittest.TestCase):
     def test_sale_ending_soonest_is_open_auctions_soonest_first(self):
         text = block(read("sale.html"), "SALE-ENDING")
         cards = re.findall(r'<li class="edged" data-ends="([^"]+)"( hidden)?><a class="perf" href="catalog/item/(\d+)\.html">'
-                           r'<span class="slot"><img src="(images/catalog/\d+(?:-e)?\.jpg)"', text)
+                           r'<span class="slot"><img src="(images/(?:catalog|thumbs)/\d+(?:-e)?\.jpg)"', text)
         by_item = {r["item"]: r for r in self.rows}
         cutoff = self.started + datetime.timedelta(minutes=5)
         still_open = [r for r in self.rows if r["format"] == "AUCTION" and r["item"] in self.imgs
@@ -337,7 +399,7 @@ class BuildTests(unittest.TestCase):
 
     def test_about_tiles_one_per_kind_with_photos_and_live_filters(self):
         tiles = re.findall(r'<li><a class="tile perf" href="catalog/\?kind=([a-z-]+)"><span class="pic">'
-                           r'<img src="(images/catalog/\d+(?:-e)?\.jpg)"[^>]*></span><b>([^<]+)</b><span>(\d+) on the shelf</span>',
+                           r'<img src="(images/(?:catalog|thumbs)/\d+(?:-e)?\.jpg)"[^>]*></span><b>([^<]+)</b><span>(\d+) on the shelf</span>',
                            block(read("about.html"), "ABOUT-KINDS"))
         expected = [(k, label, sum(1 for r in self.rows if test(r))) for k, label, test in build.KINDS
                     if any(test(r) and r["item"] in self.imgs for r in self.rows)]
@@ -356,8 +418,8 @@ class BuildTests(unittest.TestCase):
         self.assertEqual(len(items), build.FRESH_COUNT)
         home, about = read("index.html"), read("about.html")
         elsewhere = set(re.findall(r'href="catalog/item/(\d+)\.html"', block(home, "NEWLY-LISTED")))
-        elsewhere |= {item_of(i) for i in re.findall(r'src="(images/catalog/\d+(?:-e)?\.jpg)"', block(home, "CATEGORY-SHEET"))}
-        elsewhere |= {item_of(i) for i in re.findall(r'src="(images/catalog/\d+(?:-e)?\.jpg)"', block(about, "ABOUT-KINDS"))}
+        elsewhere |= {item_of(i) for i in re.findall(r'src="(images/(?:catalog|thumbs)/\d+(?:-e)?\.jpg)"', block(home, "CATEGORY-SHEET"))}
+        elsewhere |= {item_of(i) for i in re.findall(r'src="(images/(?:catalog|thumbs)/\d+(?:-e)?\.jpg)"', block(about, "ABOUT-KINDS"))}
         by_item = {r["item"]: r for r in self.rows}
         seen_titles = {by_item[i]["title"] for i in elsewhere}
         for i in items:
