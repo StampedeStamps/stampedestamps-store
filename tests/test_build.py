@@ -1,5 +1,5 @@
 """Checks for build.py (run: python -m unittest discover -s tests). Douglas 2026-10-11: no prices, one catalog."""
-import csv, datetime, hashlib, html, os, re, subprocess, sys, unittest
+import csv, datetime, hashlib, html, json, os, re, subprocess, sys, unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
@@ -50,6 +50,21 @@ def block(text, start):
 
 def item_of(img):
     return re.match(r"images/catalog/(\d+)", img).group(1)
+
+
+def ld_blocks(text):
+    return re.findall(r'<script type="application/ld\+json">(.*?)</script>', text, re.S)
+
+
+def walk(x, parent=None):
+    """Every (key, value, the dict holding it) in parsed JSON."""
+    if isinstance(x, dict):
+        for k, v in x.items():
+            yield k, v, x
+            yield from walk(v, x)
+    elif isinstance(x, list):
+        for v in x:
+            yield from walk(v, parent)
 
 
 class BuildTests(unittest.TestCase):
@@ -372,6 +387,44 @@ class BuildTests(unittest.TestCase):
         self.assertIn("params.get('kind')", index)
         self.assertIn("params.get('fmt')", index)
         self.assertIn('<option value="Auction">Auction</option>', index)
+
+    def test_hand_written_pages_have_canonical_share_image_and_icon(self):
+        # W6 (2026-10-17): one canonical matching the sitemap, a share image and an icon (so no /favicon.ico 404), and the
+        # brand font from our own copy only (W9: the cross-site second source is gone)
+        sitemap = read("sitemap.xml")
+        for name in build.PAGES:
+            t = read(name)
+            h = t[:t.index("</head>")]
+            want = f"{build.SITE}/" if name == "index.html" else f"{build.SITE}/{name}"
+            self.assertEqual(re.findall(r'<link rel="canonical" href="([^"]+)">', h), [want], name)
+            self.assertIn(f"<loc>{want}</loc>", sitemap, name)
+            self.assertEqual(len(re.findall(r'<meta property="og:image" content="https://www\.stampedestamps\.store/images/[^"]+">', h)), 1, name)
+            self.assertEqual(re.findall(r'<link rel="icon" href="([^"]+)">', h), ["images/hero.jpg"], name)
+            self.assertNotIn("stampedestamps.github.io/stampede-stories/assets/fonts", t, name)
+            desc = re.search(r'<meta name="description" content="([^"]*)">', h).group(1)
+            self.assertEqual(re.search(r'<meta property="og:description" content="([^"]*)">', h).group(1), desc, name)
+            if name == "feedback.html":   # hard rule 12: no undated trust number in the search snippet
+                self.assertNotIn("%", desc)
+
+    def test_structured_data_parses_and_never_carries_a_price(self):
+        # W6: one JSON-LD block, on Home (OnlineStore); hard rule 1 - no price, offer or rating, ever. The catalog's
+        # ItemList was left out (parent ruling 2026-10-17): Google shows ItemList carousels only for courses, movies,
+        # recipes and restaurants, and the sitemap already lists every item page.
+        found = []
+        for name in build.PAGES + ["catalog/index.html"]:
+            for blk in ld_blocks(read(name)):
+                data = json.loads(blk)
+                found.append((name, data["@type"]))
+                self.assertNotIn("$", blk, name)
+                for k, v, holder in walk(data):
+                    self.assertIsNone(re.search(r"(?i)price|offer|rating", k), f"{name}: {k}")
+        self.assertEqual(found, [("index.html", "OnlineStore")])
+        home = json.loads(ld_blocks(read("index.html"))[0])
+        self.assertEqual(home["url"], f"{build.SITE}/")
+        self.assertIn(build.STORE, home["sameAs"])
+        for p in pages()[1:]:
+            self.assertNotIn("application/ld+json", open(p, encoding="utf-8").read(), os.path.basename(p))
+
 
 
 if __name__ == "__main__":
