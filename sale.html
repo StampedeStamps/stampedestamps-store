@@ -63,6 +63,9 @@
   .menu a { font-size: .98rem; text-decoration: none; padding: .15rem 0; border-bottom: 2px solid transparent; }
   .menu a:hover { border-bottom-color: var(--lilac); }
   .menu a[aria-current="page"] { border-bottom-color: #fff; }
+  /* menu links at least 24 px tall (WCAG 2.2 target size): 32 px, and 43 px on phones (W13) */
+  .menu a { display: inline-block; }
+  @media (max-width: 43.99rem) { .top { row-gap: 0; } .menu ul { gap: 0 .9rem; } .menu a { padding: .7rem 0 .3rem; } }
 
   /* ---------- Perforated stamp edge (same trick as Stamp Stories) ---------- */
   .perf { position: relative; isolation: isolate; --r: 5px; }
@@ -79,7 +82,7 @@
   .hero-row { display: grid; gap: 1.5rem; align-items: center; }
   .hero h1 { font-size: clamp(2.6rem, 9vw, 4.4rem); }
   .hero .lede { font-size: 1.15rem; max-width: 40rem; margin: .6rem 0 1.25rem; }
-  .verse { font-style: italic; font-weight: 700; color: var(--ink); margin: 0 0 1.25rem; }
+  .verse { font-style: italic; font-weight: 700; color: var(--ink); margin: 0 0 1.25rem; max-width: 50ch; }
   .sticker { --r: 7px; padding: 1.4rem; max-width: 22rem; justify-self: center; transform: rotate(-3deg); }
   .sticker .frame { border: 2px solid var(--purple); padding: 1.4rem 1rem; text-align: center; }
   .sticker b { display: block; font-family: var(--gothic); font-weight: 400; font-size: clamp(3rem, 12vw, 4.6rem); line-height: .95; color: var(--cancel); }
@@ -92,7 +95,7 @@
     justify-content: space-between; align-items: baseline; gap: 1rem; flex-wrap: wrap; }
   .block > h2 a { font-family: var(--serif); font-size: 1rem; letter-spacing: 0; }
   @media (prefers-color-scheme: dark) { .block > h2 { border-color: var(--lilac); } }
-  .note { color: var(--soft); font-size: .95rem; margin: .5rem 0 0; }
+  .note { color: var(--soft); font-size: .95rem; margin: .5rem 0 0; max-width: 50ch; }
 
   /* Ending soonest and marked down: perforated stamp cards with the stamp's photo (same as Home's Newly listed) */
   .stamps { list-style: none; padding: 0; margin: 1.1rem 0 0; display: grid; gap: 1.1rem;

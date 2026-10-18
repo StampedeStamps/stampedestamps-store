@@ -63,6 +63,9 @@
   .menu a { font-size: .98rem; text-decoration: none; padding: .15rem 0; border-bottom: 2px solid transparent; }
   .menu a:hover { border-bottom-color: var(--lilac); }
   .menu a[aria-current="page"] { border-bottom-color: #fff; }
+  /* menu links at least 24 px tall (WCAG 2.2 target size): 32 px, and 43 px on phones (W13) */
+  .menu a { display: inline-block; }
+  @media (max-width: 43.99rem) { .top { row-gap: 0; } .menu ul { gap: 0 .9rem; } .menu a { padding: .7rem 0 .3rem; } }
 
   /* ---------- Perforated stamp edge (same trick as Stamp Stories) ---------- */
   .perf { position: relative; isolation: isolate; --r: 5px; }
@@ -77,8 +80,8 @@
 
   /* ---------- Hero ---------- */
   .hero h1 { font-size: clamp(2.6rem, 9vw, 4.4rem); max-width: 18ch; }
-  .hero .lede { font-size: 1.15rem; max-width: 42rem; margin: .8rem 0 1rem; }
-  .verse { font-style: italic; color: var(--soft); margin: 0; max-width: 42rem; }
+  .hero .lede { font-size: 1.15rem; max-width: 50ch; margin: .8rem 0 1rem; }
+  .verse { font-style: italic; color: var(--soft); margin: 0; max-width: 50ch; }
   .asof { color: var(--soft); font-size: .9rem; margin: .7rem 0 0; } /* source and date for the shop facts (W5) */
 
   /* ---------- The "certificate": shop facts as a framed stamp ---------- */
@@ -95,7 +98,7 @@
   .block > h2 a { font-family: var(--serif); font-size: 1rem; letter-spacing: 0; }
   @media (prefers-color-scheme: dark) { .block > h2 { border-color: var(--lilac); } }
   .prose { max-width: 44rem; }
-  .prose p { margin: .9rem 0 0; font-size: 1.1rem; }
+  .prose p { margin: .9rem 0 0; font-size: 1.1rem; max-width: 50ch; }
 
   /* Promises: perforated stamp cards */
   .stamps { list-style: none; padding: 0; margin: 1.1rem 0 0; display: grid; gap: 1.1rem;
@@ -174,7 +177,7 @@
   <section class="hero">
     <h1>A small shop with a big love of stamps.</h1>
     <p class="lede">StampedeUSA is a U.S. stamp shop on eBay. We list sheets and panes, singles, plate blocks, covers and postal history, revenues and a few travelers from abroad, with low starting bids and honest descriptions.</p>
-    <p class="verse">Combine wins, shipping drops too, follow us &mdash; fresh finds for you.<br>From U.S. classics to worldwide flair, low starting bids &mdash; come see what's there!</p>
+    <p class="verse">Combine wins, shipping drops too,<br>follow us &mdash; fresh finds for you.<br>From U.S. classics to worldwide flair,<br>low starting bids &mdash; come see what's there!</p>
 
     <!-- Facts from the eBay store's own About tab and header -->
     <div class="cert perf edged">

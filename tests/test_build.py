@@ -487,6 +487,45 @@ class BuildTests(unittest.TestCase):
         for p in pages()[1:]:
             self.assertNotIn("application/ld+json", open(p, encoding="utf-8").read(), os.path.basename(p))
 
+    def test_counts_agree_with_what_the_filters_show(self):
+        # W13 (2026-10-17): every number a visitor sees counts listings, and so does the catalog's counter (listings
+        # with the same title share one card), so a tile's number is exactly what its filter shows
+        index = read("catalog/index.html")
+        cards = re.findall(r'<li class="edged" data-t="[^"]*" data-c="([a-z0-9-]+)" data-f="[^"]*" '
+                           r'data-n="(\d+)" data-na="(\d+)" data-k="([^"]*)">', index)
+        self.assertEqual(len(cards), index.count('<li class="edged"'))
+        n = len(self.rows)
+        self.assertEqual(sum(int(c[1]) for c in cards), n)
+        self.assertEqual(sum(int(c[2]) for c in cards), sum(1 for r in self.rows if r["format"] == "AUCTION"))
+        self.assertIn(f"All {n} StampedeUSA listings in one place", index)
+        self.assertIn(f'<p class="count" id="count" aria-live="polite">Showing {n} of {n} listings</p>', index)
+        self.assertIn(f"<title>The catalog: {n} listings | StampedeUSA</title>", index)
+        self.assertIn("count.textContent = 'Showing ' + shown + ' of ' + total + ' listings';", index)
+        home = read("index.html")
+        block = home[home.index("<!-- CATEGORY-SHEET:START"):home.index("<!-- CATEGORY-SHEET:END -->")]
+        tiles = re.findall(r'href="catalog/\?cat=([a-z0-9-]+)">.*?<span>(\d+) listings?</span></a>', block)
+        self.assertEqual(len(tiles), 8)
+        for cat, num in tiles:
+            self.assertEqual(int(num), sum(int(c[1]) for c in cards if c[0] == cat), cat)
+        self.assertNotRegex(block, r"\d+ stamps?</span>")
+        kinds = re.findall(r'href="catalog/\?kind=([a-z-]+)">.*?<span>(\d+) on the shelf</span>', read("about.html"))
+        self.assertTrue(kinds)
+        for k, num in kinds:
+            self.assertEqual(int(num), sum(int(c[1]) for c in cards if k in c[3].split()), k)
+
+    def test_readable_line_length_and_tall_menu_links(self):
+        # W13 (2026-10-17): running text stops at about 70 characters (50ch: an average letter here is 0.70-0.77 of
+        # the width of "0"), and every menu link is at least 24 px tall (32 px; 43 px on phones)
+        capped = {"shop.html": (".hero .lede", ".note"), "sale.html": (".verse", ".note"),
+                  "about.html": (".hero .lede", ".verse", ".prose p"), "feedback.html": (".hero .lede", ".asof", ".note"),
+                  "assets/catalog.css": (".hero .lede", ".note")}
+        for name in ("index.html", "shop.html", "sale.html", "about.html", "feedback.html", "assets/catalog.css"):
+            t = read(name)
+            self.assertIn(".menu a { display: inline-block; }", t, name)
+            self.assertIn(".menu a { padding: .7rem 0 .3rem; } }", t, name)
+            for sel in capped.get(name, ()):
+                self.assertRegex(t, r"\n\s*" + re.escape(sel) + r" \{[^}]*max-width: 50ch;", f"{name} {sel}")
+        self.assertIn('<p class="verse">Combine wins, shipping drops too,<br>follow us &mdash; fresh finds for you.<br>', read("about.html"))
 
 
 if __name__ == "__main__":

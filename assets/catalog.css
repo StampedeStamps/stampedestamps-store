@@ -46,6 +46,9 @@ main { display: block; max-width: 72rem; margin: 0 auto; padding: 1.5rem 1rem 3r
 .menu a { font-size: .98rem; text-decoration: none; padding: .15rem 0; border-bottom: 2px solid transparent; }
 .menu a:hover { border-bottom-color: var(--lilac); }
 .menu a[aria-current="page"] { border-bottom-color: #fff; }
+/* menu links at least 24 px tall (WCAG 2.2 target size): 32 px, and 43 px on phones (W13) */
+.menu a { display: inline-block; }
+@media (max-width: 43.99rem) { .top { row-gap: 0; } .menu ul { gap: 0 .9rem; } .menu a { padding: .7rem 0 .3rem; } }
 
 /* Perforated stamp edge */
 .perf { position: relative; isolation: isolate; --r: 5px; }
@@ -60,7 +63,7 @@ main { display: block; max-width: 72rem; margin: 0 auto; padding: 1.5rem 1rem 3r
 
 /* Catalog index */
 .hero h1 { font-size: clamp(2.6rem, 9vw, 4.4rem); }
-.hero .lede { font-size: 1.15rem; max-width: 44rem; margin: .6rem 0 1rem; }
+.hero .lede { font-size: 1.15rem; max-width: 50ch; margin: .6rem 0 1rem; }
 .asof { color: var(--soft); font-size: .95rem; margin: 0; }
 .find { margin: 1.4rem 0 .4rem; display: grid; gap: .7rem; grid-template-columns: 1fr; }
 .find label { display: block; font-family: var(--gothic); font-size: 1.35rem; color: var(--head); }
@@ -105,7 +108,7 @@ main { display: block; max-width: 72rem; margin: 0 auto; padding: 1.5rem 1rem 3r
 .facts { list-style: none; padding: 0; margin: 1rem 0; }
 .facts li { padding: .45rem 0; border-bottom: 1px solid var(--rule); display: grid; grid-template-columns: 7rem 1fr; gap: .6rem; }
 .facts b { font-weight: 400; color: var(--soft); }
-.note { color: var(--soft); font-size: .95rem; margin: .4rem 0 0; }
+.note { color: var(--soft); font-size: .95rem; margin: .4rem 0 0; max-width: 50ch; }
 .btn { display: block; text-align: center; background: var(--purple); color: #fff; font-family: var(--gothic);
   font-size: 1.8rem; letter-spacing: .03em; line-height: 1; padding: 1rem 1rem; margin: 1.2rem 0 .6rem;
   text-decoration: none; border-radius: 4px; border: 2px solid var(--purple); }
