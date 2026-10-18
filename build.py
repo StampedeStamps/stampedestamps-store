@@ -67,8 +67,9 @@ def load_sale():
 
 # "About this issue" on item pages (Douglas 2026-10-17: "Checked facts only"). The facts were first found in the
 # ChatGPT condition reports filed with our scans, then each one was checked against a Scott catalog page (source
-# "Scott catalog") or official USPS / Smithsonian pages (source "web", links in source_url) before it was written into
-# data/issue_facts.csv. Never a condition grade and never a dollar sign: a dollar face value is spelled out in words.
+# "Scott catalog") or USPS pages (source "web", links in source_url: about.usps.com, stampsforever.com or the Postal
+# Bulletin archive) before it was written into data/issue_facts.csv. Douglas 2026-10-18: "the Scott catalog or USPS",
+# so never a dealer's site. Never a condition grade and never a dollar sign: a dollar face value is spelled out in words.
 # data/issue_titles.csv maps an exact listing title to the Scott number(s) it names. It is keyed by title, not item
 # number, so an auction that relists under a new item number keeps its facts; a retitled listing simply shows none.
 ISSUE_FIELDS = [("issue", "Issue"), ("purpose", "Why issued"), ("issued", "Issued"), ("first_day", "First day"),
