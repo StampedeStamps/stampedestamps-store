@@ -27,6 +27,9 @@ STORE = "https://www.ebay.com/str/stampedeusa"
 PAGES = ["index.html", "shop.html", "sale.html", "about.html", "feedback.html"]
 FORMAT = {"FIXED_PRICE": "Buy It Now", "AUCTION": "Auction"}
 RELATED = 6
+# W2 (Claude 2026-10-17): cards show a small copy of each photo, made by the private photo step on OMEN (Pillow; this
+# build stays standard-library). The photo step turns itself on only when it finds this exact line, so keep its form.
+THUMB_DIR = "images/thumbs"
 UTC = datetime.timezone.utc
 
 
@@ -201,6 +204,17 @@ def image_size(path):
     return None
 
 
+def card_img(item, imgs):
+    """The photo a card shows: the small copy in THUMB_DIR when one exists that is no older than the photo (so a card
+    never shows an older picture than the item page), else the full photo (W2, 2026-10-17)."""
+    full = imgs[item]
+    small = f"{THUMB_DIR}/{os.path.basename(full)}"
+    f, s = os.path.join(HERE, *full.split("/")), os.path.join(HERE, *small.split("/"))
+    if os.path.exists(s) and os.path.exists(f) and os.path.getmtime(s) >= os.path.getmtime(f):
+        return small
+    return full
+
+
 def picture(item, imgs, title, category, cls, main=False):
     """The scan when we have one; otherwise a text card naming the stamp from its own title (its first Scott number),
     or its category - never anything the title doesn't say. main=True is the item page's own photo: it loads at once
@@ -210,7 +224,7 @@ def picture(item, imgs, title, category, cls, main=False):
         dims = f' width="{size[0]}" height="{size[1]}"' if size else ""
         return f'<span class="{cls[0]}"><img src="/{esc(imgs[item])}" alt="{esc(title)}"{dims} fetchpriority="high"></span>'
     if item in imgs:
-        return f'<span class="{cls[0]}"><img src="/{esc(imgs[item])}" alt="{esc(title)}" loading="lazy"></span>'
+        return f'<span class="{cls[0]}"><img src="/{esc(card_img(item, imgs))}" alt="{esc(title)}" loading="lazy"></span>'
     m = SCOTT.search(title)
     big = f"Scott #{m.group(1)}" if m else category
     return f'<span class="{cls[1]}"><span>{esc(big)}<small>Photos on eBay</small></span></span>'
@@ -397,7 +411,7 @@ def replace_block(path, start, end, items, indent="      "):
 def photo_card(r, imgs, attrs="", tag=""):
     """A perforated card with the listing's photo, linking to its catalog page (Home, Sale and Feedback)."""
     return (f'<li class="edged"{attrs}><a class="perf" href="catalog/item/{esc(r["item"])}.html">'
-            f'<span class="slot"><img src="{esc(imgs[r["item"]])}" alt="{esc(r["title"])}" loading="lazy"></span>{tag}'
+            f'<span class="slot"><img src="{esc(card_img(r["item"], imgs))}" alt="{esc(r["title"])}" loading="lazy"></span>{tag}'
             f'<span class="t">{esc(r["title"])}</span><span class="c">{esc(FRIENDLY.get(r["category"], r["category"]))}</span></a></li>')
 
 
@@ -441,7 +455,7 @@ def update_home_sheet(rows, imgs, avoid=()):
     for c in cats:
         n, r = counts[c], face[c]
         items.append(f'<li><a class="tile perf" href="catalog/?cat={esc(slug(c))}">'
-                     f'<span class="pic"><img src="{esc(imgs[r["item"]])}" alt="{esc(r["title"])}" loading="lazy"></span>'
+                     f'<span class="pic"><img src="{esc(card_img(r["item"], imgs))}" alt="{esc(r["title"])}" loading="lazy"></span>'
                      f'<b>{esc(FRIENDLY.get(c, c))}</b><span>{n} {"stamp" if n == 1 else "stamps"}</span></a></li>')
     replace_block(os.path.join(HERE, "index.html"), SHEET_START, SHEET_END, items)
     return cats, {face[c]["item"] for c in cats}
@@ -463,7 +477,7 @@ def about_tiles(rows, imgs, avoid=()):
                     next((r for r in shot if r["item"] not in faces), shot[0]))
         faces.append(face["item"])
         tiles.append(f'<li><a class="tile perf" href="catalog/?kind={k}">'
-                     f'<span class="pic"><img src="{esc(imgs[face["item"]])}" alt="{esc(face["title"])}" loading="lazy"></span>'
+                     f'<span class="pic"><img src="{esc(card_img(face["item"], imgs))}" alt="{esc(face["title"])}" loading="lazy"></span>'
                      f'<b>{esc(label)}</b><span>{len(mine)} on the shelf</span></a></li>')
     return tiles, set(faces)
 
@@ -583,6 +597,14 @@ def main():
     out_dir = os.path.join(HERE, "catalog")
     if os.path.isdir(out_dir):
         shutil.rmtree(out_dir)             # stale item pages of sold listings must not linger
+    small_dir = os.path.join(HERE, *THUMB_DIR.split("/"))
+    small = 0
+    if os.path.isdir(small_dir):           # W2: drop the small copies of photos that are gone (sold or ended listings)
+        keep = {os.path.basename(p) for p in imgs.values()}
+        for f in sorted(os.listdir(small_dir)):
+            if f not in keep:
+                os.remove(os.path.join(small_dir, f))
+        small = sum(1 for i in imgs if card_img(i, imgs) != imgs[i])
     by_cat = {}
     for r in rows:
         by_cat.setdefault(r["category"], []).append(r)
@@ -612,7 +634,8 @@ def main():
     if no_kind:   # a new country category shows up here first; add it to COUNTRIES
         print(f"{sum(no_kind.values())} listings in no About kind: " + "; ".join(f"{k} {v}" for k, v in sorted(no_kind.items())))
     # the summary stays the LAST line: the morning refresh logs only the last line it prints
-    print(f"built {len(rows)} item pages + catalog index ({len(imgs)} with photos), sitemap {len(urls)} urls, "
+    print(f"built {len(rows)} item pages + catalog index ({len(imgs)} with photos, {small} with a small card copy), "
+          f"sitemap {len(urls)} urls, "
           f"shop categories {ncat}, home newly listed {len(newest)}, home category sheet {len(sheet)}, "
           f"about tiles {len(tiles)}, feedback fresh {len(fresh)}, sale markdowns {len(marked)}, "
           f"sale ending soonest {len(soon)} (clock {now:%Y-%m-%dT%H:%M:%SZ}), as of {lastmod}")
