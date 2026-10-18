@@ -530,6 +530,22 @@ class BuildTests(unittest.TestCase):
             self.assertEqual(re.findall(r'<link rel="apple-touch-icon" href="([^"]+)">', head), [pre + "apple-touch-icon.png"], name)
             self.assertEqual(len(re.findall(r'<link rel="(?:shortcut )?icon"', head)), 1, name)
 
+    def test_every_page_preloads_the_brand_font_it_uses(self):
+        # W12 step 1 (2026-10-18): the League Gothic file is preloaded from the page head, so it arrives with the HTML
+        # instead of after the CSS is read; the preload must name the SAME address as the @font-face (else it downloads twice)
+        font = "fonts/league-gothic-latin-400-normal.woff2"
+        self.assertTrue(os.path.exists(os.path.join(ROOT, font)))
+        css = read("assets/catalog.css")
+        self.assertIn(f'url("/{font}")', css)
+        hand = [(name, read(name), font) for name in build.PAGES]
+        built = [(p[len(ROOT) + 1:], open(p, encoding="utf-8").read(), "/" + font) for p in pages()]
+        for name, t, want in hand + built:
+            head = t[:t.index("</head>")]
+            self.assertEqual(re.findall(r'<link rel="preload" href="([^"]+)" as="font" type="font/woff2" crossorigin>', head), [want], name)
+            self.assertEqual(head.count('rel="preload"'), 1, name)
+            if name in build.PAGES:   # the hand-written pages carry their own @font-face with the same relative address
+                self.assertIn(f'url("{font}")', t, name)
+
     def test_structured_data_parses_and_never_carries_a_price(self):
         # W6: one JSON-LD block, on Home (OnlineStore); hard rule 1 - no price, offer or rating, ever. The catalog's
         # ItemList was left out (parent ruling 2026-10-17): Google shows ItemList carousels only for courses, movies,
