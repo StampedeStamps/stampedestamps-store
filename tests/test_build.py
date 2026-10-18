@@ -503,12 +503,32 @@ class BuildTests(unittest.TestCase):
             self.assertEqual(re.findall(r'<link rel="canonical" href="([^"]+)">', h), [want], name)
             self.assertIn(f"<loc>{want}</loc>", sitemap, name)
             self.assertEqual(len(re.findall(r'<meta property="og:image" content="https://www\.stampedestamps\.store/images/[^"]+">', h)), 1, name)
-            self.assertEqual(re.findall(r'<link rel="icon" href="([^"]+)">', h), ["images/hero.jpg"], name)
+            self.assertEqual(re.findall(r'<link rel="icon" href="([^"]+)"', h), ["images/icon-32.png"], name)   # W14
             self.assertNotIn("stampedestamps.github.io/stampede-stories/assets/fonts", t, name)
             desc = re.search(r'<meta name="description" content="([^"]*)">', h).group(1)
             self.assertEqual(re.search(r'<meta property="og:description" content="([^"]*)">', h).group(1), desc, name)
             if name == "feedback.html":   # hard rule 12: no undated trust number in the search snippet
                 self.assertNotIn("%", desc)
+
+    def test_every_page_uses_the_small_site_icon(self):
+        # W14 (2026-10-18): the browser-tab icon was images/hero.jpg (the 156 KB logo photo) on every page; now a 32 x 32
+        # PNG (+ a 180 x 180 home-screen icon) made from the same logo. hero.jpg stays the Home logo and the share image.
+        def png_size(rel):
+            with open(os.path.join(ROOT, rel), "rb") as f:
+                head = f.read(24)
+            self.assertEqual(head[:8], b"\x89PNG\r\n\x1a\n", rel)
+            return int.from_bytes(head[16:20], "big"), int.from_bytes(head[20:24], "big"), os.path.getsize(os.path.join(ROOT, rel))
+        w, h, n = png_size("images/icon-32.png")
+        self.assertEqual((w, h), (32, 32)); self.assertLess(n, 8 * 1024)
+        w, h, n = png_size("images/apple-touch-icon.png")
+        self.assertEqual((w, h), (180, 180)); self.assertLess(n, 40 * 1024)
+        hand = [(name, read(name), "images/") for name in build.PAGES]
+        built = [(p[len(ROOT) + 1:], open(p, encoding="utf-8").read(), "/images/") for p in pages()]
+        for name, t, pre in hand + built:
+            head = t[:t.index("</head>")]
+            self.assertEqual(re.findall(r'<link rel="icon" href="([^"]+)" type="image/png" sizes="32x32">', head), [pre + "icon-32.png"], name)
+            self.assertEqual(re.findall(r'<link rel="apple-touch-icon" href="([^"]+)">', head), [pre + "apple-touch-icon.png"], name)
+            self.assertEqual(len(re.findall(r'<link rel="(?:shortcut )?icon"', head)), 1, name)
 
     def test_structured_data_parses_and_never_carries_a_price(self):
         # W6: one JSON-LD block, on Home (OnlineStore); hard rule 1 - no price, offer or rating, ever. The catalog's

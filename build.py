@@ -208,7 +208,8 @@ def head(title, desc, canonical, image):
 <meta property="og:image" content="{esc(SITE + '/' + image)}">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#4B006E">
-<link rel="icon" href="/images/hero.jpg">
+<link rel="icon" href="/images/icon-32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
 <link rel="stylesheet" href="/assets/catalog.css">
 </head>
 <body>
