@@ -75,9 +75,8 @@ class BuildTests(unittest.TestCase):
         cls.rows = rows()
         cls.imgs = build.load()[1]
         # titles appear as written AND lower-cased in the cards' data-t search attribute; both are verbatim titles
-        # ... and as written inside the catalog's JSON-LD list (W6)
-        cls.titles = sorted({html.escape(t, quote=True) for r in cls.rows for t in (r["title"], r["title"].lower())} |
-                            {build.ld_json(r["title"])[1:-1] for r in cls.rows}, key=len, reverse=True)
+        cls.titles = sorted({html.escape(t, quote=True) for r in cls.rows for t in (r["title"], r["title"].lower())},
+                            key=len, reverse=True)
 
     def test_one_page_per_listing(self):
         items = os.listdir(os.path.join(ROOT, "catalog", "item"))
@@ -408,40 +407,24 @@ class BuildTests(unittest.TestCase):
                 self.assertNotIn("%", desc)
 
     def test_structured_data_parses_and_never_carries_a_price(self):
-        # W6: JSON-LD on Home (OnlineStore) and the catalog (ItemList) only; hard rule 1 - no price, offer or rating, ever
-        titles = {r["title"] for r in self.rows}
+        # W6: one JSON-LD block, on Home (OnlineStore); hard rule 1 - no price, offer or rating, ever. The catalog's
+        # ItemList was left out (parent ruling 2026-10-17): Google shows ItemList carousels only for courses, movies,
+        # recipes and restaurants, and the sitemap already lists every item page.
         found = []
         for name in build.PAGES + ["catalog/index.html"]:
             for blk in ld_blocks(read(name)):
                 data = json.loads(blk)
                 found.append((name, data["@type"]))
+                self.assertNotIn("$", blk, name)
                 for k, v, holder in walk(data):
                     self.assertIsNone(re.search(r"(?i)price|offer|rating", k), f"{name}: {k}")
-                    if isinstance(v, str) and not (k == "name" and holder.get("@type") == "ListItem"):
-                        self.assertNotIn("$", v, f"{name}: {k}")
-                    if k == "name" and holder.get("@type") == "ListItem":
-                        self.assertIn(v, titles, name)   # a title as written: its face value is the only "$"
-        self.assertEqual(found, [("index.html", "OnlineStore"), ("catalog/index.html", "ItemList")])
+        self.assertEqual(found, [("index.html", "OnlineStore")])
         home = json.loads(ld_blocks(read("index.html"))[0])
         self.assertEqual(home["url"], f"{build.SITE}/")
         self.assertIn(build.STORE, home["sameAs"])
         for p in pages()[1:]:
             self.assertNotIn("application/ld+json", open(p, encoding="utf-8").read(), os.path.basename(p))
 
-    def test_catalog_item_list_is_its_cards_in_order(self):
-        # W6: one ListItem per card, in card order; each url an item page that exists, each name the card's title
-        index = read("catalog/index.html")
-        lists = [d for d in map(json.loads, ld_blocks(index)) if d.get("@type") == "ItemList"]
-        self.assertEqual(len(lists), 1)
-        els = lists[0]["itemListElement"]
-        cards = re.findall(r'<a class="card perf" href="/catalog/item/(\d+)\.html">.*?<span class="t">([^<]*)</span>', index)
-        self.assertGreater(len(cards), 0)
-        self.assertEqual(lists[0]["numberOfItems"], len(cards))
-        self.assertEqual([e["position"] for e in els], list(range(1, len(cards) + 1)))
-        self.assertEqual([e["url"] for e in els], [f"{build.SITE}/catalog/item/{i}.html" for i, _ in cards])
-        self.assertEqual([e["name"] for e in els], [html.unescape(x) for _, x in cards])
-        for e in els:
-            self.assertTrue(os.path.exists(os.path.join(ROOT, "catalog", "item", e["url"].rsplit("/", 1)[1])), e["url"])
 
 
 if __name__ == "__main__":
