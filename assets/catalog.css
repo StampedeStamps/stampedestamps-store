@@ -120,6 +120,11 @@ main { display: block; max-width: 72rem; margin: 0 auto; padding: 1.5rem 1rem 3r
 .related { margin: 2.6rem 0 0; }
 .related h2 { font-size: 2rem; border-bottom: 2px solid var(--purple); padding-bottom: .35rem; }
 @media (prefers-color-scheme: dark) { .related h2 { border-color: var(--lilac); } }
+/* "About this issue": checked facts below the photo and the eBay button, so the first screen is unchanged */
+.issue { margin: 2.2rem 0 0; max-width: 40rem; }
+.issue h2 { font-size: 2rem; border-bottom: 2px solid var(--purple); padding-bottom: .35rem; }
+@media (prefers-color-scheme: dark) { .issue h2 { border-color: var(--lilac); } }
+.issue .facts { margin: .3rem 0 .5rem; }
 
 /* Footer */
 footer.selvage { margin-top: 2rem; }

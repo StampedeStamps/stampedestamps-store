@@ -527,6 +527,49 @@ class BuildTests(unittest.TestCase):
                 self.assertRegex(t, r"\n\s*" + re.escape(sel) + r" \{[^}]*max-width: 50ch;", f"{name} {sel}")
         self.assertIn('<p class="verse">Combine wins, shipping drops too,<br>follow us &mdash; fresh finds for you.<br>', read("about.html"))
 
+    def test_issue_facts_are_checked_facts_only(self):
+        # Douglas 2026-10-17, "Checked facts only": every row names the authority that checked it; no dollar sign
+        # (a dollar face value is spelled out), no condition grade, no value talk
+        facts, titles = build.load_issues()
+        self.assertGreater(len(facts), 0)
+        banned = re.compile(r"(?i)\$|\b(?:price[ds]?|values?|valued|worth|rare|scarce|invest\w*|mnh|hinged|hinge|"
+                            r"centering|centered|gum|grade[ds]?|superb|xf|vf|premium)\b")
+        for s, f in facts.items():
+            self.assertTrue(f["issue"] and f["issued"] and f["face"], s)
+            self.assertIn(f["source"], ("Scott catalog", "web"), s)
+            urls = f["source_url"].split()   # https, or the USPS Postal Bulletin archive, which serves only http
+            self.assertTrue(all(u.startswith(("https://", "http://www.uspostalbulletins.com/")) for u in urls), s)
+            self.assertTrue(urls if f["source"] == "web" else True, s)
+            for k, v in f.items():
+                if k not in ("source_url",):
+                    self.assertIsNone(banned.search(v), f"{s} {k}: {v}")
+        for t, ss in titles.items():
+            self.assertTrue(ss and all(s in facts for s in ss), t)
+
+    def test_item_pages_show_issue_facts_only_when_every_number_is_checked(self):
+        facts, titles = build.load_issues()
+        shown = 0
+        for r in self.rows:
+            text = open(os.path.join(ROOT, "catalog", "item", f"{r['item']}.html"), encoding="utf-8").read()
+            mapped = titles.get(r["title"]) or []
+            self.assertEqual('<section class="issue"' in text, bool(mapped) and all(s in facts for s in mapped), r["item"])
+            if '<section class="issue"' not in text:
+                continue
+            shown += 1
+            start = text.index('<section class="issue"')
+            sec = text[start:text.index("</section>", start)]
+            self.assertLess(text.index('<div class="buy">'), start, r["item"])   # below the button: first screen unchanged
+            for s in mapped:
+                self.assertIn(html.escape(facts[s]["issue"], quote=True), sec, f"{r['item']} {s}")
+            self.assertIn("The eBay listing shows this item's own photos and condition.", sec, r["item"])
+        self.assertGreater(shown, 0)
+        one = build.issue_box("T", ({"1": {"issue": "A Issue", "issued": "May 1, 1950", "face": "3¢", "source": "Scott catalog",
+                                           "source_url": ""}}, {"T": ["1"]}))
+        self.assertIn("<b>Issue</b><span>A Issue</span>", one)
+        self.assertIn("Checked against the Scott catalog.", one)
+        self.assertEqual(build.issue_box("T", ({"1": {"issue": "A", "issued": "1950", "face": "3¢", "source": "Scott catalog",
+                                                       "source_url": ""}}, {"T": ["1", "2"]})), "")   # never in part
+
 
 if __name__ == "__main__":
     unittest.main()

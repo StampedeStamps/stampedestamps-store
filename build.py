@@ -9,6 +9,9 @@ Inputs (written on OMEN every morning from the eBay export; never edited by hand
   data/feed_meta.json      {"source", "as_of", "listings"}
   data/sale_items.csv      item,sale_ends   (the one hand-kept input: items marked down on eBay and the markdown's
                            last day; the export carries no markdown signal. Header only = no markdown running.)
+  data/issue_facts.csv     scott,issue,purpose,issued,first_day,face,color,design,inscribed,designer,printing,perf,format,
+                           quantity,source,source_url
+  data/issue_titles.csv    title,scotts      (both hand-checked, not daily: see ISSUE_FIELDS below)
 Outputs (committed; GitHub Pages and later AWS Amplify serve them as plain files):
   catalog/index.html, catalog/item/<item>.html, sitemap.xml, robots.txt, and the marker blocks inside the hand-written
   pages: Shop's category list, Home's category sheet and Newly listed, the Sale page, About's "What you'll find" and
@@ -20,6 +23,7 @@ page also depends on the clock (auctions that have ended drop off); STORE_BUILD_
     python build.py
 """
 import csv, datetime, html, json, os, re, shutil, sys
+from urllib.parse import urlparse
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SITE = "https://www.stampedestamps.store"
@@ -59,6 +63,73 @@ def load():
 def load_sale():
     path = os.path.join(HERE, "data", "sale_items.csv")
     return read_csv(path) if os.path.exists(path) else []
+
+
+# "About this issue" on item pages (Douglas 2026-10-17: "Checked facts only"). The facts were first found in the
+# ChatGPT condition reports filed with our scans, then each one was checked against a Scott catalog page (source
+# "Scott catalog") or official USPS / Smithsonian pages (source "web", links in source_url) before it was written into
+# data/issue_facts.csv. Never a condition grade and never a dollar sign: a dollar face value is spelled out in words.
+# data/issue_titles.csv maps an exact listing title to the Scott number(s) it names. It is keyed by title, not item
+# number, so an auction that relists under a new item number keeps its facts; a retitled listing simply shows none.
+ISSUE_FIELDS = [("issue", "Issue"), ("purpose", "Why issued"), ("issued", "Issued"), ("first_day", "First day"),
+                ("face", "Face value"), ("color", "Color"), ("design", "Design"), ("inscribed", "Inscribed"),
+                ("designer", "Designed by"), ("printing", "Printing"), ("perf", "Perforation"), ("format", "Format"),
+                ("quantity", "Quantity")]
+
+
+def load_issues():
+    """({scott: checked facts}, {exact listing title: [scott, ...]}); empty when the files are missing."""
+    d = os.path.join(HERE, "data")
+    facts = {r["scott"]: r for r in read_csv(os.path.join(d, "issue_facts.csv"))} \
+        if os.path.exists(os.path.join(d, "issue_facts.csv")) else {}
+    titles = {r["title"]: r["scotts"].split() for r in read_csv(os.path.join(d, "issue_titles.csv"))} \
+        if os.path.exists(os.path.join(d, "issue_titles.csv")) else {}
+    return facts, titles
+
+
+def issue_sources(found):
+    """The line under the facts: which authority checked them, with a link to each web source."""
+    links = []
+    for f in found:
+        for u in (f.get("source_url") or "").split():
+            if u.startswith(("https://", "http://")) and u not in links:   # the Postal Bulletin archive is http only
+                links.append(u)
+    said = []
+    if any(f.get("source") == "Scott catalog" for f in found):
+        said.append("Checked against the Scott catalog.")
+    hosts = {}
+    for u in links:                                 # one name per site; several pages of one site are numbered
+        hosts.setdefault(urlparse(u).netloc.removeprefix("www."), []).append(u)
+    if hosts:
+        said.append("Checked against " + ", ".join(
+            f'<a href="{esc(us[0])}">{esc(h)}</a>' if len(us) == 1 else
+            f'{esc(h)} (' + ", ".join(f'<a href="{esc(u)}">{i}</a>' for i, u in enumerate(us, 1)) + ")"
+            for h, us in hosts.items()) + ".")
+    return " ".join(said) + " The eBay listing shows this item's own photos and condition."
+
+
+def issue_box(title, issues):
+    """The item page's "About this issue" section, or "" when the title is not mapped or any of its Scott numbers has
+    no checked facts (a lot is never described in part). One number: the full fact list. Several: one line each."""
+    facts, titles = issues
+    scotts = titles.get(title)
+    if not scotts or any(s not in facts for s in scotts):
+        return ""
+    found = [facts[s] for s in scotts]
+    li = lambda label, text: f"      <li><b>{label}</b><span>{esc(text)}</span></li>\n"
+    if len(found) == 1:
+        h2 = "About this issue"
+        lis = "".join(li(label, found[0][k]) for k, label in ISSUE_FIELDS if found[0].get(k))
+    elif len({f["issue"] for f in found}) == 1 and len({f["issued"] for f in found}) == 1:
+        h2 = "About this issue"                     # one issue, several designs (a se-tenant block or sheet)
+        lis = li("Issue", found[0]["issue"]) + li("Issued", found[0]["issued"]) + "".join(
+            li(f"Scott #{esc(s)}", ", ".join(v for v in (f.get("design"), f["face"]) if v)) for s, f in zip(scotts, found))
+    else:
+        h2 = "About these issues"
+        lis = "".join(li(f"Scott #{esc(s)}", ", ".join(v for v in (f["issue"], f["issued"], f["face"]) if v))
+                      for s, f in zip(scotts, found))
+    return (f'  <section class="issue" aria-labelledby="issue-h">\n    <h2 id="issue-h">{h2}</h2>\n'
+            f'    <ul class="facts">\n{lis}    </ul>\n    <p class="note">{issue_sources(found)}</p>\n  </section>\n')
 
 
 def parse_utc(s):
@@ -327,7 +398,7 @@ def build_index(rows, imgs, meta):
     return out
 
 
-def build_item(r, rows_by_cat, imgs):
+def build_item(r, rows_by_cat, imgs, issues=({}, {})):
     item, title = r["item"], r["title"]
     fmt = FORMAT.get(r["format"], r["format"])
     same = rows_by_cat[r["category"]]
@@ -350,6 +421,7 @@ def build_item(r, rows_by_cat, imgs):
     </div>
   </div>
 """
+    out += issue_box(title, issues)
     if rel:
         out += '  <section class="related"><h2>More from ' + esc(r["category"]) + '</h2>\n  <ul class="stamps">\n'
         out += "\n".join("    " + card([x], imgs) for x in rel)
@@ -613,8 +685,10 @@ def main():
     for r in rows:
         by_cat.setdefault(r["category"], []).append(r)
     write(os.path.join(out_dir, "index.html"), build_index(rows, imgs, meta))
+    issues = load_issues()
     for r in rows:
-        write(os.path.join(out_dir, "item", f"{r['item']}.html"), build_item(r, by_cat, imgs))
+        write(os.path.join(out_dir, "item", f"{r['item']}.html"), build_item(r, by_cat, imgs, issues))
+    with_facts = sum(1 for r in rows if issue_box(r["title"], issues))
     lastmod = meta.get("as_of", "")
     urls = [f"{SITE}/{p}" if p != "index.html" else f"{SITE}/" for p in PAGES] + [f"{SITE}/catalog/"] + \
            [f"{SITE}/catalog/item/{r['item']}.html" for r in rows]
@@ -638,8 +712,8 @@ def main():
     if no_kind:   # a new country category shows up here first; add it to COUNTRIES
         print(f"{sum(no_kind.values())} listings in no About kind: " + "; ".join(f"{k} {v}" for k, v in sorted(no_kind.items())))
     # the summary stays the LAST line: the morning refresh logs only the last line it prints
-    print(f"built {len(rows)} item pages + catalog index ({len(imgs)} with photos, {small} with a small card copy), "
-          f"sitemap {len(urls)} urls, "
+    print(f"built {len(rows)} item pages + catalog index ({len(imgs)} with photos, {small} with a small card copy, "
+          f"{with_facts} with issue facts), sitemap {len(urls)} urls, "
           f"shop categories {ncat}, home newly listed {len(newest)}, home category sheet {len(sheet)}, "
           f"about tiles {len(tiles)}, feedback fresh {len(fresh)}, sale markdowns {len(marked)}, "
           f"sale ending soonest {len(soon)} (clock {now:%Y-%m-%dT%H:%M:%SZ}), as of {lastmod}")
