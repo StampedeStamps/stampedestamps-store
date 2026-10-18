@@ -240,6 +240,48 @@ class BuildTests(unittest.TestCase):
         # the private photo step on OMEN (make_card_thumbs.py) makes the small copies only when it finds this exact line
         self.assertRegex(read("build.py"), r'(?m)^THUMB_DIR = "images/thumbs"\r?$')
 
+    def test_menu_has_catalog_and_every_page_has_the_header_search(self):
+        # W4 (Douglas 2026-10-17): Catalog joins the menu on every page; every page has the same header search
+        want = ["Home", "Shop", "Catalog", "Sale", "About", "Feedback"]
+        current = {"index.html": "Home", "shop.html": "Shop", "sale.html": "Sale", "about.html": "About",
+                   "feedback.html": "Feedback", "catalog/index.html": "Catalog"}
+        item = os.path.join("catalog", "item", sorted(os.listdir(os.path.join(ROOT, "catalog", "item")))[0])
+        current[item.replace(os.sep, "/")] = "Catalog"
+        for name, here in current.items():
+            t = read(name)
+            head = t[t.index('<header class="selvage">'):t.index("</header>")]
+            menu = head[head.index('<nav class="menu"'):head.index("</nav>")]
+            self.assertEqual(re.findall(r'<li><a href="[^"]+"(?: aria-current="page")?>([^<]+)</a></li>', menu), want, name)
+            self.assertEqual(re.findall(r'aria-current="page">([^<]+)<', menu), [here], name)
+            forms = re.findall(r'<form class="hfind" action="(/?catalog/)" method="get" role="search" aria-label="Site search">', head)
+            self.assertEqual(len(forms), 1, name)
+            self.assertIn('<input id="hq" name="q" type="search"', head, name)
+        css = read("assets/catalog.css")
+        self.assertIn(".hfind {", css)
+        # phones: Home, Shop and the catalog show their own catalog search right under the header instead
+        for name in ("index.html", "shop.html"):
+            self.assertIn("@media (max-width: 43.99rem) { .hfind { display: none; } }", read(name), name)
+        self.assertIn('<body class="own-search">', read("catalog/index.html"))
+        self.assertIn("@media (max-width: 43.99rem) { .own-search .hfind { display: none; } }", css)
+
+    def test_every_search_on_the_site_searches_our_catalog(self):
+        # W4 (Douglas 2026-10-17): one search behavior - every search box and Shop's popular searches open our catalog;
+        # the catalog's no-results panel still offers the eBay store search
+        for name in build.PAGES + ["catalog/index.html"]:
+            t = read(name)
+            for form in re.findall(r"<form[^>]*>", t):
+                if name == "catalog/index.html" and 'onsubmit="return false"' in form:
+                    continue                     # the catalog's own box filters the page in place
+                self.assertRegex(form, r'action="/?catalog/"', f"{name}: {form}")
+                self.assertNotIn("ebay.com", form, name)
+            self.assertNotIn("_nkw=", t, name)
+            self.assertNotIn('name="_nkw"', t, name)
+        chips = re.findall(r'<a class="perf" href="catalog/\?q=([^"]+)">', read("shop.html"))
+        self.assertGreaterEqual(len(chips), 10)
+        empty = read("catalog/index.html")
+        empty = empty[empty.index('id="empty"'):]
+        self.assertIn(f'<a href="{build.STORE}" target="stampede_ebay">search the eBay store</a>', empty[:600])
+
     def test_canonicals_unique(self):
         seen = {}
         for p in pages():
