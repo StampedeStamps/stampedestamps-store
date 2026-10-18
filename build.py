@@ -147,12 +147,17 @@ def head(title, desc, canonical, image):
     <nav class="menu" aria-label="Main menu">
       <ul>
         <li><a href="/index.html">Home</a></li>
-        <li><a href="/shop.html" aria-current="page">Shop</a></li>
+        <li><a href="/shop.html">Shop</a></li>
+        <li><a href="/catalog/" aria-current="page">Catalog</a></li>
         <li><a href="/sale.html">Sale</a></li>
         <li><a href="/about.html">About</a></li>
         <li><a href="/feedback.html">Feedback</a></li>
       </ul>
     </nav>
+    <form class="hfind" action="/catalog/" method="get" role="search" aria-label="Site search">
+      <input id="hq" name="q" type="search" placeholder="Search the catalog" aria-label="Search the catalog" autocomplete="off">
+      <button type="submit">Search</button>
+    </form>
   </div>
 </header>
 <main id="main">
@@ -304,7 +309,7 @@ def build_index(rows, imgs, meta):
     n = len(rows)
     out = head(f"The catalog: {n} listings | StampedeUSA",
                f"Browse all {n} StampedeUSA listings: U.S. sheets, panes, singles, covers, revenues and worldwide stamps. "
-               "Every one opens on eBay.", f"{SITE}/catalog/", "images/hero.jpg")
+               "Every one opens on eBay.", f"{SITE}/catalog/", "images/hero.jpg").replace("<body>\n", '<body class="own-search">\n', 1)
     out += f"""  <section class="hero">
     <h1>The whole shelf, one page.</h1>
     <p class="lede">All {n} StampedeUSA listings in one place. Search by Scott number, year, country or subject, or narrow it by

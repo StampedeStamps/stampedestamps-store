@@ -66,6 +66,15 @@
   /* menu links at least 24 px tall (WCAG 2.2 target size): 32 px, and 43 px on phones (W13) */
   .menu a { display: inline-block; }
   @media (max-width: 43.99rem) { .top { row-gap: 0; } .menu ul { gap: 0 .9rem; } .menu a { padding: .7rem 0 .3rem; } }
+  /* Header search on every page; every search box on the site searches our catalog (W4, Douglas 2026-10-17) */
+  .hfind { display: flex; gap: .4rem; margin: 0; }
+  .hfind input { width: 11rem; min-width: 0; font: inherit; font-size: 1rem; padding: .4rem .6rem; color: #1F1D2B; background: #fff; border: 2px solid #fff; border-radius: 3px; }
+  .hfind button { font-family: var(--gothic); font-size: 1.15rem; letter-spacing: .03em; line-height: 1; padding: .35rem .8rem; color: #4B006E; background: #fff; border: 2px solid #fff; border-radius: 3px; cursor: pointer; }
+  .hfind button:hover { text-decoration: underline; }
+  @media (min-width: 44rem) { .top { display: grid; grid-template-columns: auto 1fr auto; align-items: center; column-gap: 1.5rem; } .menu { justify-self: end; } }
+  @media (min-width: 44rem) and (max-width: 67.99rem) { .top { grid-template-columns: auto 1fr; } .hfind { grid-column: 1 / -1; justify-self: end; margin: 0 0 .6rem; } }
+  @media (max-width: 43.99rem) { .menu ul { gap: 0 .6rem; } .hfind { flex: 1 1 100%; margin: 0 0 .55rem; } .hfind input { flex: 1; width: auto; padding: .35rem .6rem; } }
+  @media (max-width: 22.49rem) { .menu ul { gap: 0 .3rem; } .menu a { font-size: .9rem; } }
 
   /* ---------- Perforated stamp edge (same trick as Stamp Stories) ---------- */
   .perf { position: relative; isolation: isolate; --r: 5px; }
@@ -163,11 +172,16 @@
       <ul>
         <li><a href="index.html">Home</a></li>
         <li><a href="shop.html">Shop</a></li>
+        <li><a href="catalog/">Catalog</a></li>
         <li><a href="sale.html">Sale</a></li>
         <li><a href="about.html" aria-current="page">About</a></li>
         <li><a href="feedback.html">Feedback</a></li>
       </ul>
     </nav>
+    <form class="hfind" action="catalog/" method="get" role="search" aria-label="Site search">
+      <input id="hq" name="q" type="search" placeholder="Search the catalog" aria-label="Search the catalog" autocomplete="off">
+      <button type="submit">Search</button>
+    </form>
   </div>
 </header>
 

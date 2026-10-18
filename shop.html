@@ -66,6 +66,17 @@
   /* menu links at least 24 px tall (WCAG 2.2 target size): 32 px, and 43 px on phones (W13) */
   .menu a { display: inline-block; }
   @media (max-width: 43.99rem) { .top { row-gap: 0; } .menu ul { gap: 0 .9rem; } .menu a { padding: .7rem 0 .3rem; } }
+  /* Header search on every page; every search box on the site searches our catalog (W4, Douglas 2026-10-17) */
+  .hfind { display: flex; gap: .4rem; margin: 0; }
+  .hfind input { width: 11rem; min-width: 0; font: inherit; font-size: 1rem; padding: .4rem .6rem; color: #1F1D2B; background: #fff; border: 2px solid #fff; border-radius: 3px; }
+  .hfind button { font-family: var(--gothic); font-size: 1.15rem; letter-spacing: .03em; line-height: 1; padding: .35rem .8rem; color: #4B006E; background: #fff; border: 2px solid #fff; border-radius: 3px; cursor: pointer; }
+  .hfind button:hover { text-decoration: underline; }
+  @media (min-width: 44rem) { .top { display: grid; grid-template-columns: auto 1fr auto; align-items: center; column-gap: 1.5rem; } .menu { justify-self: end; } }
+  @media (min-width: 44rem) and (max-width: 67.99rem) { .top { grid-template-columns: auto 1fr; } .hfind { grid-column: 1 / -1; justify-self: end; margin: 0 0 .6rem; } }
+  @media (max-width: 43.99rem) { .menu ul { gap: 0 .6rem; } .hfind { flex: 1 1 100%; margin: 0 0 .55rem; } .hfind input { flex: 1; width: auto; padding: .35rem .6rem; } }
+  @media (max-width: 22.49rem) { .menu ul { gap: 0 .3rem; } .menu a { font-size: .9rem; } }
+  /* phones: this page's own catalog search sits right under the header, so the header box is not repeated (W4) */
+  @media (max-width: 43.99rem) { .hfind { display: none; } }
 
   /* ---------- Perforated stamp edge (same trick as Stamp Stories) ---------- */
   .perf { position: relative; isolation: isolate; --r: 5px; }
@@ -173,11 +184,16 @@
       <ul>
         <li><a href="index.html">Home</a></li>
         <li><a href="shop.html" aria-current="page">Shop</a></li>
+        <li><a href="catalog/">Catalog</a></li>
         <li><a href="sale.html">Sale</a></li>
         <li><a href="about.html">About</a></li>
         <li><a href="feedback.html">Feedback</a></li>
       </ul>
     </nav>
+    <form class="hfind" action="catalog/" method="get" role="search" aria-label="Site search">
+      <input id="hq" name="q" type="search" placeholder="Search the catalog" aria-label="Search the catalog" autocomplete="off">
+      <button type="submit">Search</button>
+    </form>
   </div>
 </header>
 
@@ -188,30 +204,30 @@
     <h1>The whole shelf, one click away.</h1>
     <p class="lede">Search the store, pick a department, or sort by what is newest or ending soonest. Every stamp opens on eBay, where the price, bids and photos are always current.</p>
 
-    <form class="find" action="https://www.ebay.com/str/stampedeusa" method="get" target="stampede_ebay" role="search">
-      <label for="q">Search the store</label>
+    <form class="find" action="catalog/" method="get" role="search">
+      <label for="q">Search the catalog</label>
       <div class="bar">
-        <input id="q" name="_nkw" type="search" placeholder="Try Batman, eagle, Boston or 1962" autocomplete="off" required>
+        <input id="q" name="q" type="search" placeholder="Try Batman, eagle, Boston or 1962" autocomplete="off">
         <button type="submit">Search</button>
       </div>
       <p class="hint">A Scott number, a year, a country or a subject all work.</p>
     </form>
 
     <ul class="chips" aria-label="Popular searches">
-      <li class="edged"><a class="perf" href="https://www.ebay.com/str/stampedeusa?_nkw=pane" target="stampede_ebay">Panes</a></li>
-      <li class="edged"><a class="perf" href="https://www.ebay.com/str/stampedeusa?_nkw=revenue" target="stampede_ebay">Revenues</a></li>
-      <li class="edged"><a class="perf" href="https://www.ebay.com/str/stampedeusa?_nkw=cover" target="stampede_ebay">Covers</a></li>
-      <li class="edged"><a class="perf" href="https://www.ebay.com/str/stampedeusa?_nkw=airmail" target="stampede_ebay">Airmail</a></li>
-      <li class="edged"><a class="perf" href="https://www.ebay.com/str/stampedeusa?_nkw=souvenir+sheet" target="stampede_ebay">Souvenir sheets</a></li>
-      <li class="edged"><a class="perf" href="https://www.ebay.com/str/stampedeusa?_nkw=perfin" target="stampede_ebay">Perfins</a></li>
-      <li class="edged"><a class="perf" href="https://www.ebay.com/str/stampedeusa?_nkw=plate+block" target="stampede_ebay">Plate blocks</a></li>
-      <li class="edged"><a class="perf" href="https://www.ebay.com/str/stampedeusa?_nkw=christmas" target="stampede_ebay">Christmas</a></li>
-      <li class="edged"><a class="perf" href="https://www.ebay.com/str/stampedeusa?_nkw=looney+tunes" target="stampede_ebay">Looney Tunes</a></li>
-      <li class="edged"><a class="perf" href="https://www.ebay.com/str/stampedeusa?_nkw=nature+of+america" target="stampede_ebay">Nature of America</a></li>
-      <li class="edged"><a class="perf" href="https://www.ebay.com/str/stampedeusa?_nkw=album" target="stampede_ebay">Album pages</a></li>
-      <li class="edged"><a class="perf" href="https://www.ebay.com/str/stampedeusa?_nkw=postal+card" target="stampede_ebay">Postal cards</a></li>
-      <li class="edged"><a class="perf" href="https://www.ebay.com/str/stampedeusa?_nkw=duck" target="stampede_ebay">Duck stamps</a></li>
-      <li class="edged"><a class="perf" href="https://www.ebay.com/str/stampedeusa?_nkw=hologram" target="stampede_ebay">Holograms</a></li>
+      <li class="edged"><a class="perf" href="catalog/?q=pane">Panes</a></li>
+      <li class="edged"><a class="perf" href="catalog/?q=revenue">Revenues</a></li>
+      <li class="edged"><a class="perf" href="catalog/?q=cover">Covers</a></li>
+      <li class="edged"><a class="perf" href="catalog/?q=airmail">Airmail</a></li>
+      <li class="edged"><a class="perf" href="catalog/?q=souvenir+sheet">Souvenir sheets</a></li>
+      <li class="edged"><a class="perf" href="catalog/?q=perfin">Perfins</a></li>
+      <li class="edged"><a class="perf" href="catalog/?q=plate+block">Plate blocks</a></li>
+      <li class="edged"><a class="perf" href="catalog/?q=christmas">Christmas</a></li>
+      <li class="edged"><a class="perf" href="catalog/?q=looney+tunes">Looney Tunes</a></li>
+      <li class="edged"><a class="perf" href="catalog/?q=nature+of+america">Nature of America</a></li>
+      <li class="edged"><a class="perf" href="catalog/?q=album">Album pages</a></li>
+      <li class="edged"><a class="perf" href="catalog/?q=postal+card">Postal cards</a></li>
+      <li class="edged"><a class="perf" href="catalog/?q=duck">Duck stamps</a></li>
+      <li class="edged"><a class="perf" href="catalog/?q=hologram">Holograms</a></li>
     </ul>
     <a class="btn" href="catalog/">Browse the full catalog</a>
   </section>
