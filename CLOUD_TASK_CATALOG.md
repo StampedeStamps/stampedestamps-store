@@ -24,7 +24,9 @@ open the PR, and end.
 ## Hard rules
 1. **No prices. Ever.** No price, bid, "deal", "value" or "$" of your own. 25 titles contain a `$` face value: keep
    the title exactly as given and never call it a price.
-2. **No invented facts.** Only the title, category, condition and format may be asserted about an item.
+2. **No invented facts.** Only the title, category, condition and format may be asserted about an item, plus issue
+   facts checked against the Scott catalog or USPS and shown with their source (amended by Douglas 2026-10-18).
+   Never a condition grade or a price.
 3. Standard-library Python for the build (`build.py`). Plain JavaScript, no frameworks, no CDNs, no external fonts,
    no trackers or analytics.
 4. Do NOT edit `data/*.csv`, `images/`, `fonts/`, `CNAME`, `.nojekyll` or the five existing pages (except one link,

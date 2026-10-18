@@ -579,8 +579,11 @@ class BuildTests(unittest.TestCase):
         for s, f in facts.items():
             self.assertTrue(f["issue"] and f["issued"] and f["face"], s)
             self.assertIn(f["source"], ("Scott catalog", "web"), s)
-            urls = f["source_url"].split()   # https, or the USPS Postal Bulletin archive, which serves only http
-            self.assertTrue(all(u.startswith(("https://", "http://www.uspostalbulletins.com/")) for u in urls), s)
+            # Douglas 2026-10-18, "facts checked against the Scott catalog or USPS, shown with their source": links go to
+            # USPS pages only (the Postal Bulletin archive serves only http), never to a dealer's or anyone else's site
+            usps = ("https://about.usps.com/", "https://www.stampsforever.com/", "http://www.uspostalbulletins.com/")
+            urls = f["source_url"].split()
+            self.assertTrue(all(u.startswith(usps) for u in urls), f"{s}: {urls}")
             self.assertTrue(urls if f["source"] == "web" else True, s)
             for k, v in f.items():
                 if k not in ("source_url",):

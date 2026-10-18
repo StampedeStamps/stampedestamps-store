@@ -25,12 +25,17 @@
     <nav class="menu" aria-label="Main menu">
       <ul>
         <li><a href="/index.html">Home</a></li>
-        <li><a href="/shop.html" aria-current="page">Shop</a></li>
+        <li><a href="/shop.html">Shop</a></li>
+        <li><a href="/catalog/" aria-current="page">Catalog</a></li>
         <li><a href="/sale.html">Sale</a></li>
         <li><a href="/about.html">About</a></li>
         <li><a href="/feedback.html">Feedback</a></li>
       </ul>
     </nav>
+    <form class="hfind" action="/catalog/" method="get" role="search" aria-label="Site search">
+      <input id="hq" name="q" type="search" placeholder="Search the catalog" aria-label="Search the catalog" autocomplete="off">
+      <button type="submit">Search</button>
+    </form>
   </div>
 </header>
 <main id="main">
