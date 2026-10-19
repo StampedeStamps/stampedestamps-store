@@ -28,7 +28,7 @@
   }
   :root {
     --purple: #4B006E; --lilac: #D7B8F0; --page: #F6F4FA; --grid: #E7E2EF; --paper: #FFFFFF;
-    --ink: #1F1D2B; --cancel: #B3261E; --soft: #5B566A; --link: var(--purple); --head: var(--purple);
+    --ink: #1F1D2B; --cancel: #B3261E; --soft: #5B566A; --link: var(--purple); --head: var(--ink); /* W7: headings in ink; purple = clickable */
     --edge: rgba(75,0,110,.55); --rule: #DCD5E6;
     --gothic: "League Gothic","Oswald","Arial Narrow",Impact,sans-serif;
     --serif: Charter,"Bitstream Charter","Sitka Text",Cambria,Georgia,serif;
@@ -36,7 +36,7 @@
   }
   @media (prefers-color-scheme: dark) {
     :root { --page: #1C1A22; --grid: transparent; --paper: #2A2732; --ink: #ECE8F3; --cancel: #FF8A80;
-      --soft: #B9B2C6; --link: var(--lilac); --head: var(--lilac); --edge: rgba(215,184,240,.5); --rule: #3A3644; }
+      --soft: #B9B2C6; --link: var(--lilac); --head: var(--ink); --edge: rgba(215,184,240,.5); --rule: #3A3644; }
   }
   * { box-sizing: border-box; }
   html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
@@ -106,7 +106,7 @@
 
   /* Quick searches: small perforated labels */
   .chips { list-style: none; padding: 0; margin: 1rem 0 0; display: flex; flex-wrap: wrap; gap: .6rem; }
-  .chips a { --r: 3px; display: inline-block; padding: .45rem .9rem; text-decoration: none; color: var(--head); font-size: .98rem; }
+  .chips a { --r: 3px; display: inline-block; padding: .45rem .9rem; text-decoration: none; color: var(--link); font-size: .98rem; }
   .chips a:hover { text-decoration: underline; }
 
   /* ---------- Department pane: a sheet of perforated stamps ---------- */
