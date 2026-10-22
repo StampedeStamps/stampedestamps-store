@@ -545,6 +545,12 @@ class BuildTests(unittest.TestCase):
             self.assertEqual(head.count('rel="preload"'), 1, name)
             if name in build.PAGES:   # the hand-written pages carry their own @font-face with the same relative address
                 self.assertIn(f'url("{font}")', t, name)
+        # W12 step 2 (2026-10-22): font-display optional everywhere the font is declared, so a late font never swaps in
+        # and moves the page (the preload above makes it arrive in time on most connections)
+        for name in build.PAGES + ["assets/catalog.css"]:
+            t = read(name)
+            self.assertEqual(t.count("font-display: optional;"), 1, name)
+            self.assertNotIn("font-display: swap", t, name)
 
     def test_structured_data_parses_and_never_carries_a_price(self):
         # W6: one JSON-LD block, on Home (OnlineStore); hard rule 1 - no price, offer or rating, ever. The catalog's

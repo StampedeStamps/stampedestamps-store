@@ -4,7 +4,7 @@
   font-family: "League Gothic";
   font-style: normal;
   font-weight: 400;
-  font-display: swap;
+  font-display: optional; /* W12 step 2: with the preload, used only if it is in hand by the first paint, so the page never jumps */
   src: url("/fonts/league-gothic-latin-400-normal.woff2") format("woff2");
 }
 :root {
