@@ -10,8 +10,8 @@ Inputs (written on OMEN every morning from the eBay export; never edited by hand
   data/sale_items.csv      item,sale_ends   (the one hand-kept input: items marked down on eBay and the markdown's
                            last day; the export carries no markdown signal. Header only = no markdown running.)
   data/issue_facts.csv     scott,issue,purpose,issued,first_day,face,color,design,inscribed,designer,printing,perf,format,
-                           quantity,source,source_url
-  data/issue_titles.csv    title,scotts      (both hand-checked, not daily: see ISSUE_FIELDS below)
+                           quantity,source,source_url      (hand-checked; changed only by a pull request)
+  data/issue_titles.csv    title,scotts      (rebuilt every morning from listings.csv: see ISSUE_FIELDS below)
 Outputs (committed; GitHub Pages and later AWS Amplify serve them as plain files):
   catalog/index.html, catalog/item/<item>.html, sitemap.xml, robots.txt, and the marker blocks inside the hand-written
   pages: Shop's category list, Home's category sheet and Newly listed, the Sale page, About's "What you'll find" and
@@ -71,7 +71,11 @@ def load_sale():
 # Bulletin archive) before it was written into data/issue_facts.csv. Douglas 2026-10-18: "the Scott catalog or USPS",
 # so never a dealer's site. Never a condition grade and never a dollar sign: a dollar face value is spelled out in words.
 # data/issue_titles.csv maps an exact listing title to the Scott number(s) it names. It is keyed by title, not item
-# number, so an auction that relists under a new item number keeps its facts; a retitled listing simply shows none.
+# number, so an auction that relists under a new item number keeps its facts. Since 2026-10-23 the private 3:45 AM
+# refresh on OMEN rebuilds it every morning from that day's listings.csv, so a retitled or new listing gets its box at
+# the next refresh: a title maps only to Scott numbers that already have a checked row in issue_facts.csv, and a title
+# whose year, face value, color or portrait disagrees with its row gets none. Change issue_facts.csv (by a pull request),
+# never issue_titles.csv: the next refresh would overwrite a hand edit.
 ISSUE_FIELDS = [("issue", "Issue"), ("purpose", "Why issued"), ("issued", "Issued"), ("first_day", "First day"),
                 ("face", "Face value"), ("color", "Color"), ("design", "Design"), ("inscribed", "Inscribed"),
                 ("designer", "Designed by"), ("printing", "Printing"), ("perf", "Perforation"), ("format", "Format"),
