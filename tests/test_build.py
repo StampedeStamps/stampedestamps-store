@@ -238,7 +238,7 @@ class BuildTests(unittest.TestCase):
 
     def test_card_copies_fit_the_box_and_the_budget(self):
         # C2 (2026-10-24): every small copy fits THUMB_BOX (480 x 320) and is 60 KB or less, and the photo step reads the
-        # box from this exact line; the Home logo (hero.jpg) stays 624 x 535 and is re-saved at q80 (159 KB -> 107 KB)
+        # box from this exact line; the Home logo (hero.jpg) stays 624 x 535 and is re-saved at q75 (159 KB -> 90 KB)
         self.assertRegex(read("build.py"), r'(?m)^THUMB_BOX = \(480, 320\)\r?$')
         d = os.path.join(ROOT, *build.THUMB_DIR.split("/"))
         names = [f for f in os.listdir(d) if f.endswith(".jpg")]
@@ -251,7 +251,7 @@ class BuildTests(unittest.TestCase):
                 self.assertLessEqual(w, build.THUMB_BOX[0], f)
                 self.assertLessEqual(h, build.THUMB_BOX[1], f)
         hero = os.path.join(ROOT, "images", "hero.jpg")
-        self.assertLessEqual(os.path.getsize(hero), 110 * 1024)
+        self.assertLessEqual(os.path.getsize(hero), 95 * 1024)
         if hasattr(build, "image_size"):
             self.assertEqual(build.image_size(hero), (624, 535))
 
