@@ -34,6 +34,9 @@ RELATED = 6
 # W2 (Claude 2026-10-17): cards show a small copy of each photo, made by the private photo step on OMEN (Pillow; this
 # build stays standard-library). The photo step turns itself on only when it finds this exact line, so keep its form.
 THUMB_DIR = "images/thumbs"
+# C2 (Claude 2026-10-24): the small copies fit this box. Cards are drawn about 115-345 CSS px wide, so 480 x 320 covers a
+# 2.6x phone screen for the usual 140 px card. The photo step reads this exact line too (default 720 x 480 without it).
+THUMB_BOX = (480, 320)
 UTC = datetime.timezone.utc
 
 
