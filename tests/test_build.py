@@ -532,8 +532,23 @@ class BuildTests(unittest.TestCase):
         about = read("about.html")
         hero = about[about.index('<section class="hero">'):about.index("</section>", about.index('<section class="hero">'))]
         self.assertEqual(re.findall(r'<a class="btn"[^>]*>[^<]*</a>', hero), ['<a class="btn" href="catalog/">Browse the full catalog</a>'])
-        for page in ("index.html", "shop.html"):
-            self.assertIn('<a class="btn" href="catalog/">Browse the full catalog</a>', read(page), page)
+        for page in ("index.html", "shop.html"):   # there it is the quieter style since A3b; same link and words
+            self.assertIn('<a class="btn alt" href="catalog/">Browse the full catalog</a>', read(page), page)
+
+    def test_one_action_leads_on_every_hand_written_page(self):
+        # A3b (2026-10-24, scorecard A3): exactly one filled action per page; every other button is "btn alt"
+        # (outlined, same size and words). Home and Shop lead with their catalog search; the other three with a button.
+        hero_search = re.compile(r'<form class="find"[^>]*>.*?<button type="submit">Search</button>', re.S)
+        for page, lead in (("index.html", "search"), ("shop.html", "search"), ("sale.html", "btn"),
+                           ("about.html", "btn"), ("feedback.html", "btn")):
+            t = read(page)
+            main = t[t.index('<main id="main">'):t.index("</main>")]
+            filled = re.findall(r'<a class="btn"[ >]', main)
+            self.assertEqual(len(filled), 0 if lead == "search" else 1, page)
+            if lead == "search":
+                self.assertTrue(hero_search.search(main), page)
+            self.assertIn(".btn.alt { background: transparent; color: var(--link); border-color: var(--link); }", t, page)
+            self.assertGreaterEqual(main.count('<a class="btn alt" '), 1, page)
 
     def test_hand_written_pages_have_canonical_share_image_and_icon(self):
         # W6 (2026-10-17): one canonical matching the sitemap, a share image and an icon (so no /favicon.ico 404), and the

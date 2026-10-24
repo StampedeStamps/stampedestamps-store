@@ -178,6 +178,9 @@
     font-size: 1.6rem; letter-spacing: .03em; line-height: 1; padding: .9rem 1rem; margin: 1.1rem 0 .9rem;
     text-decoration: none; border-radius: 4px; border: 2px solid var(--purple); }
   @media (prefers-color-scheme: dark) { .btn { border-color: var(--lilac); } }
+  /* A3b (2026-10-24): one action leads on each page (filled purple); every other button is this quieter outlined
+     style, same size and words, so the eye goes to the main action first */
+  .btn.alt { background: transparent; color: var(--link); border-color: var(--link); }
   @media (prefers-reduced-motion: no-preference) {
     .btn { transition: transform .08s ease-out; }
     .btn:active { transform: translateY(1px); }
@@ -319,7 +322,7 @@
       <!-- NEWLY-LISTED:END -->
     </ul>
     <p class="note">Prices, bids and time left are always current on eBay.</p>
-    <a class="btn" href="catalog/">Browse the full catalog</a>
+    <a class="btn alt" href="catalog/">Browse the full catalog</a>
   </section>
 
   <!-- ===================== TWO WAYS TO BUY ===================== -->
@@ -329,12 +332,12 @@
       <div class="way perf edged"><div class="frame">
         <h3>Auctions</h3>
         <p>Low starting bids on sheets, panes, plate blocks, revenues and covers. New auctions start every week.</p>
-        <a class="btn" href="https://www.ebay.com/str/stampedeusa?LH_Auction=1" target="stampede_ebay">See the auctions</a>
+        <a class="btn alt" href="https://www.ebay.com/str/stampedeusa?LH_Auction=1" target="stampede_ebay">See the auctions</a>
       </div></div>
       <div class="way perf edged"><div class="frame">
         <h3>Buy It Now</h3>
         <p>Found the one you want? Skip the wait and make it yours today, with combined shipping on multiple items.</p>
-        <a class="btn" href="https://www.ebay.com/str/stampedeusa?LH_BIN=1" target="stampede_ebay">Shop Buy It Now</a>
+        <a class="btn alt" href="https://www.ebay.com/str/stampedeusa?LH_BIN=1" target="stampede_ebay">Shop Buy It Now</a>
       </div></div>
     </div>
   </section>
