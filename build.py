@@ -37,6 +37,10 @@ THUMB_DIR = "images/thumbs"
 # C2 (Claude 2026-10-24): the small copies fit this box. Cards are drawn about 115-345 CSS px wide, so 480 x 320 covers a
 # 2.6x phone screen for the usual 140 px card. The photo step reads this exact line too (default 720 x 480 without it).
 THUMB_BOX = (480, 320)
+# C2b (Claude 2026-10-24): the full photo (item pages; also Stamp Stories' share image) fits this box. The item page draws
+# it at most 346 CSS px wide on phones (1,038 screen px at 3x) and 1,434 screen px tall on a 2x tablet. The private photo
+# step reads this exact line (1600 x 1600 without it) and keeps every full photo at 250,000 bytes or less.
+PHOTO_BOX = (1040, 1440)
 UTC = datetime.timezone.utc
 
 

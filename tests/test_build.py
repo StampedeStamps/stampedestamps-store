@@ -255,6 +255,21 @@ class BuildTests(unittest.TestCase):
         if hasattr(build, "image_size"):
             self.assertEqual(build.image_size(hero), (624, 535))
 
+    def test_full_photos_fit_the_box_and_the_budget(self):
+        # C2b (2026-10-24): every full photo (the item page's main photo; Stamp Stories shares it) fits PHOTO_BOX
+        # (1040 x 1440) and is 250,000 bytes or less; the private photo step reads the box from this exact line
+        self.assertRegex(read("build.py"), r'(?m)^PHOTO_BOX = \(1040, 1440\)\r?$')
+        listed = [r["image"] for r in build.read_csv(os.path.join(ROOT, "data", "catalog_images.csv"))]
+        here = [p for p in listed if os.path.exists(os.path.join(ROOT, *p.split("/")))]
+        self.assertGreater(len(here), 300)
+        for rel in here:
+            p = os.path.join(ROOT, *rel.split("/"))
+            self.assertLessEqual(os.path.getsize(p), 250_000, rel)
+            size = build.image_size(p)
+            self.assertIsNotNone(size, rel)
+            self.assertLessEqual(size[0], build.PHOTO_BOX[0], rel)
+            self.assertLessEqual(size[1], build.PHOTO_BOX[1], rel)
+
     def test_thumb_dir_line_is_where_the_photo_step_looks(self):
         # the private photo step on OMEN (make_card_thumbs.py) makes the small copies only when it finds this exact line
         self.assertRegex(read("build.py"), r'(?m)^THUMB_DIR = "images/thumbs"\r?$')
