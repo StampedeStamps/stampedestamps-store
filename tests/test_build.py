@@ -526,6 +526,15 @@ class BuildTests(unittest.TestCase):
         self.assertIn("params.get('fmt')", index)
         self.assertIn('<option value="Auction">Auction</option>', index)
 
+    def test_about_hero_has_one_start_shopping_button(self):
+        # A1 (2026-10-24): About's first screen offers one clear way to start shopping, the same catalog button Home and
+        # Shop use (scorecard A1: name, what we sell, a search box and one obvious "start shopping" action, no scrolling)
+        about = read("about.html")
+        hero = about[about.index('<section class="hero">'):about.index("</section>", about.index('<section class="hero">'))]
+        self.assertEqual(re.findall(r'<a class="btn"[^>]*>[^<]*</a>', hero), ['<a class="btn" href="catalog/">Browse the full catalog</a>'])
+        for page in ("index.html", "shop.html"):
+            self.assertIn('<a class="btn" href="catalog/">Browse the full catalog</a>', read(page), page)
+
     def test_hand_written_pages_have_canonical_share_image_and_icon(self):
         # W6 (2026-10-17): one canonical matching the sitemap, a share image and an icon (so no /favicon.ico 404), and the
         # brand font from our own copy only (W9: the cross-site second source is gone)
