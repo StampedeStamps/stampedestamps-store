@@ -37,6 +37,11 @@ THUMB_DIR = "images/thumbs"
 # C2 (Claude 2026-10-24): the small copies fit this box. Cards are drawn about 115-345 CSS px wide, so 480 x 320 covers a
 # 2.6x phone screen for the usual 140 px card. The photo step reads this exact line too (default 720 x 480 without it).
 THUMB_BOX = (480, 320)
+# C2c (Claude 2026-10-24): a 1x screen (most desktop monitors at 100%) draws a card at most 232 x 160 CSS px, a quarter
+# of the THUMB_BOX copy's pixels, so cards also offer a copy that fits this box (srcset "1x"); phones and sharp screens
+# keep the THUMB_BOX copy ("2x"). The private photo step makes these copies (10 KB or less) only when it finds both lines.
+THUMB_1X_DIR = "images/thumbs1x"
+THUMB_1X_BOX = (240, 160)
 # C2b (Claude 2026-10-24): the full photo (item pages; also Stamp Stories' share image) fits this box. The item page draws
 # it at most 346 CSS px wide on phones (1,038 screen px at 3x) and 1,434 screen px tall on a 2x tablet. The private photo
 # step reads this exact line (1600 x 1600 without it) and keeps every full photo at 250,000 bytes or less.
@@ -305,6 +310,17 @@ def card_img(item, imgs):
     return full
 
 
+def card_srcset(item, imgs, lead=""):
+    """C2c: ' srcset="<1x copy> 1x, <card photo> 2x"' when the 1x copy in THUMB_1X_DIR exists and is no older than the
+    photo (the card_img rule), else "" so the card shows card_img alone. lead is "/" on catalog pages, "" on root pages."""
+    full = imgs[item]
+    one = f"{THUMB_1X_DIR}/{os.path.basename(full)}"
+    f, s = os.path.join(HERE, *full.split("/")), os.path.join(HERE, *one.split("/"))
+    if os.path.exists(s) and os.path.exists(f) and os.path.getmtime(s) >= os.path.getmtime(f):
+        return f' srcset="{esc(lead + one)} 1x, {esc(lead + card_img(item, imgs))} 2x"'
+    return ""
+
+
 def picture(item, imgs, title, category, cls, main=False):
     """The scan when we have one; otherwise a text card naming the stamp from its own title (its first Scott number),
     or its category - never anything the title doesn't say. main=True is the item page's own photo: it loads at once
@@ -314,7 +330,7 @@ def picture(item, imgs, title, category, cls, main=False):
         dims = f' width="{size[0]}" height="{size[1]}"' if size else ""
         return f'<span class="{cls[0]}"><img src="/{esc(imgs[item])}" alt="{esc(title)}"{dims} fetchpriority="high"></span>'
     if item in imgs:
-        return f'<span class="{cls[0]}"><img src="/{esc(card_img(item, imgs))}" alt="{esc(title)}" loading="lazy"></span>'
+        return f'<span class="{cls[0]}"><img src="/{esc(card_img(item, imgs))}"{card_srcset(item, imgs, "/")} alt="{esc(title)}" loading="lazy"></span>'
     m = SCOTT.search(title)
     big = f"Scott #{m.group(1)}" if m else category
     return f'<span class="{cls[1]}"><span>{esc(big)}<small>Photos on eBay</small></span></span>'
@@ -506,7 +522,7 @@ def replace_block(path, start, end, items, indent="      "):
 def photo_card(r, imgs, attrs="", tag=""):
     """A perforated card with the listing's photo, linking to its catalog page (Home, Sale and Feedback)."""
     return (f'<li class="edged"{attrs}><a class="perf" href="catalog/item/{esc(r["item"])}.html">'
-            f'<span class="slot"><img src="{esc(card_img(r["item"], imgs))}" alt="{esc(r["title"])}" loading="lazy"></span>{tag}'
+            f'<span class="slot"><img src="{esc(card_img(r["item"], imgs))}"{card_srcset(r["item"], imgs)} alt="{esc(r["title"])}" loading="lazy"></span>{tag}'
             f'<span class="t">{esc(r["title"])}</span><span class="c">{esc(FRIENDLY.get(r["category"], r["category"]))}</span></a></li>')
 
 
@@ -550,7 +566,7 @@ def update_home_sheet(rows, imgs, avoid=()):
     for c in cats:
         n, r = counts[c], face[c]
         items.append(f'<li><a class="tile perf" href="catalog/?cat={esc(slug(c))}">'
-                     f'<span class="pic"><img src="{esc(card_img(r["item"], imgs))}" alt="{esc(r["title"])}" loading="lazy"></span>'
+                     f'<span class="pic"><img src="{esc(card_img(r["item"], imgs))}"{card_srcset(r["item"], imgs)} alt="{esc(r["title"])}" loading="lazy"></span>'
                      f'<b>{esc(FRIENDLY.get(c, c))}</b><span>{n} {"listing" if n == 1 else "listings"}</span></a></li>')
     replace_block(os.path.join(HERE, "index.html"), SHEET_START, SHEET_END, items)
     return cats, {face[c]["item"] for c in cats}
@@ -572,7 +588,7 @@ def about_tiles(rows, imgs, avoid=()):
                     next((r for r in shot if r["item"] not in faces), shot[0]))
         faces.append(face["item"])
         tiles.append(f'<li><a class="tile perf" href="catalog/?kind={k}">'
-                     f'<span class="pic"><img src="{esc(card_img(face["item"], imgs))}" alt="{esc(face["title"])}" loading="lazy"></span>'
+                     f'<span class="pic"><img src="{esc(card_img(face["item"], imgs))}"{card_srcset(face["item"], imgs)} alt="{esc(face["title"])}" loading="lazy"></span>'
                      f'<b>{esc(label)}</b><span>{len(mine)} on the shelf</span></a></li>')
     return tiles, set(faces)
 
@@ -700,6 +716,14 @@ def main():
             if f not in keep:
                 os.remove(os.path.join(small_dir, f))
         small = sum(1 for i in imgs if card_img(i, imgs) != imgs[i])
+    one_dir = os.path.join(HERE, *THUMB_1X_DIR.split("/"))
+    one = 0
+    if os.path.isdir(one_dir):             # C2c: the same for the 1x copies
+        keep = {os.path.basename(p) for p in imgs.values()}
+        for f in sorted(os.listdir(one_dir)):
+            if f not in keep:
+                os.remove(os.path.join(one_dir, f))
+        one = sum(1 for i in imgs if card_srcset(i, imgs))
     by_cat = {}
     for r in rows:
         by_cat.setdefault(r["category"], []).append(r)
@@ -731,7 +755,7 @@ def main():
     if no_kind:   # a new country category shows up here first; add it to COUNTRIES
         print(f"{sum(no_kind.values())} listings in no About kind: " + "; ".join(f"{k} {v}" for k, v in sorted(no_kind.items())))
     # the summary stays the LAST line: the morning refresh logs only the last line it prints
-    print(f"built {len(rows)} item pages + catalog index ({len(imgs)} with photos, {small} with a small card copy, "
+    print(f"built {len(rows)} item pages + catalog index ({len(imgs)} with photos, {small} with a small card copy, {one} with a 1x copy, "
           f"{with_facts} with issue facts), sitemap {len(urls)} urls, "
           f"shop categories {ncat}, home newly listed {len(newest)}, home category sheet {len(sheet)}, "
           f"about tiles {len(tiles)}, feedback fresh {len(fresh)}, sale markdowns {len(marked)}, "

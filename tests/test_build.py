@@ -274,6 +274,73 @@ class BuildTests(unittest.TestCase):
         # the private photo step on OMEN (make_card_thumbs.py) makes the small copies only when it finds this exact line
         self.assertRegex(read("build.py"), r'(?m)^THUMB_DIR = "images/thumbs"\r?$')
 
+    def test_one_x_copies_fit_the_box_and_the_budget(self):
+        # C2c (2026-10-24): 1x screens get a copy that fits THUMB_1X_BOX (240 x 160) at 10 KB or less; the private photo
+        # step finds the folder and the box on these exact lines, and build.py drops copies of photos that are gone
+        text = read("build.py")
+        self.assertRegex(text, r'(?m)^THUMB_1X_DIR = "images/thumbs1x"\r?$')
+        self.assertRegex(text, r'(?m)^THUMB_1X_BOX = \(240, 160\)\r?$')
+        d = os.path.join(ROOT, *build.THUMB_1X_DIR.split("/"))
+        names = [f for f in os.listdir(d) if f.endswith(".jpg")]
+        self.assertGreater(len(names), 300)
+        keep = {os.path.basename(p) for p in self.imgs.values()}
+        self.assertEqual(sorted(set(os.listdir(d)) - keep), [])
+        for f in names:
+            p = os.path.join(d, f)
+            self.assertLessEqual(os.path.getsize(p), 10 * 1024, f)
+            w, h = build.image_size(p)
+            self.assertLessEqual(w, build.THUMB_1X_BOX[0], f)
+            self.assertLessEqual(h, build.THUMB_1X_BOX[1], f)
+
+    def test_cards_offer_the_1x_copy_to_1x_screens(self):
+        # C2c: a card photo with a current 1x copy carries srcset "<1x copy> 1x, <card photo> 2x"; src stays the card
+        # photo (phones and sharp screens), both files exist, and nearly every catalog card has one
+        seen = 0
+        for name, lead in [("catalog/index.html", "/"), ("index.html", ""), ("sale.html", ""), ("about.html", ""),
+                           ("feedback.html", "")]:
+            for src, one, two in re.findall(r'<img src="([^"]+)" srcset="([^" ]+) 1x, ([^" ]+) 2x"', read(name)):
+                seen += 1
+                self.assertEqual(two, src, name)
+                self.assertRegex(one, "^" + re.escape(lead + build.THUMB_1X_DIR) + r"/\d+(?:-e)?\.jpg$", name)
+                self.assertEqual(os.path.basename(one), os.path.basename(src), name)
+                for f in (one, two):
+                    self.assertTrue(os.path.exists(os.path.join(ROOT, *f.lstrip("/").split("/"))), f)
+        self.assertGreater(seen, 300)
+        cards = re.findall(r'<span class="ph"><img src="/[^"]+"( srcset="[^"]+")?', read("catalog/index.html"))
+        self.assertGreater(sum(1 for c in cards if c), 0.95 * len(cards))
+        # a "2x" copy counts as half its pixels, so card photos fill their box instead of keeping their own size
+        for name, rule in (("assets/catalog.css", ".stamps .ph img"), ("index.html", ".photo-pane .pic img"),
+                           ("about.html", ".tile .pic img")):
+            self.assertRegex(read(name), re.escape(rule) + r" \{ display: block; width: 100%; height: 100%; object-fit: contain; \}", name)
+
+    def test_card_srcset_never_offers_an_older_1x_copy(self):
+        import tempfile
+        here = build.HERE
+        with tempfile.TemporaryDirectory() as d:
+            try:
+                build.HERE = d
+                for sub in ("images/catalog", build.THUMB_DIR, build.THUMB_1X_DIR):
+                    os.makedirs(os.path.join(d, *sub.split("/")))
+                full = os.path.join(d, "images", "catalog", "1.jpg")
+                small = os.path.join(d, *build.THUMB_DIR.split("/"), "1.jpg")
+                one = os.path.join(d, *build.THUMB_1X_DIR.split("/"), "1.jpg")
+                for f in (full, small, one):
+                    with open(f, "wb") as fh:
+                        fh.write(b"x")
+                imgs = {"1": "images/catalog/1.jpg", "2": "images/catalog/2.jpg"}
+                os.utime(full, (1000, 1000))
+                os.utime(small, (2000, 2000))
+                os.utime(one, (2000, 2000))
+                self.assertEqual(build.card_srcset("1", imgs),
+                                 f' srcset="{build.THUMB_1X_DIR}/1.jpg 1x, {build.THUMB_DIR}/1.jpg 2x"')
+                self.assertEqual(build.card_srcset("1", imgs, "/"),
+                                 f' srcset="/{build.THUMB_1X_DIR}/1.jpg 1x, /{build.THUMB_DIR}/1.jpg 2x"')
+                os.utime(one, (500, 500))              # the photo changed after its 1x copy was made: no srcset
+                self.assertEqual(build.card_srcset("1", imgs), "")
+                self.assertEqual(build.card_srcset("2", imgs), "")    # no photo, no copy
+            finally:
+                build.HERE = here
+
     def test_menu_has_catalog_and_every_page_has_the_header_search(self):
         # W4 (Douglas 2026-10-17): Catalog joins the menu on every page; every page has the same header search
         want = ["Home", "Shop", "Catalog", "Sale", "About", "Feedback"]
