@@ -321,6 +321,21 @@ def card_srcset(item, imgs, lead=""):
     return ""
 
 
+def card_srcset_w(item, imgs, sizes):
+    """C2d (2026-11-04): card_srcset, but each copy is described by its real width in pixels ("240w") and `sizes` says
+    how wide the photo's box is drawn, so a phone takes the 1x copy whenever that copy is sharp enough for the box, not
+    only on 1x screens. Falls back to card_srcset's "1x, 2x" form when a width can't be read or the 1x copy is not
+    narrower than the card photo; "" exactly when card_srcset is ""."""
+    plain = card_srcset(item, imgs)
+    if not plain:
+        return ""
+    one, two = f"{THUMB_1X_DIR}/{os.path.basename(imgs[item])}", card_img(item, imgs)
+    w1, w2 = (image_size(os.path.join(HERE, *p.split("/"))) for p in (one, two))
+    if not w1 or not w2 or w1[0] >= w2[0]:
+        return plain
+    return f' srcset="{esc(one)} {w1[0]}w, {esc(two)} {w2[0]}w" sizes="{esc(sizes)}"'
+
+
 def picture(item, imgs, title, category, cls, main=False):
     """The scan when we have one; otherwise a text card naming the stamp from its own title (its first Scott number),
     or its category - never anything the title doesn't say. main=True is the item page's own photo: it loads at once
@@ -495,6 +510,12 @@ def update_shop(rows):
 
 NEW_START, NEW_END, NEW_COUNT = "<!-- NEWLY-LISTED:START", "<!-- NEWLY-LISTED:END -->", 12
 SHEET_START, SHEET_END, SHEET_COUNT = "<!-- CATEGORY-SHEET:START", "<!-- CATEGORY-SHEET:END -->", 8
+# C2d (Claude 2026-11-04): the sheet draws each photo in a box 136 CSS px tall (.photo-pane .pic) and only 84-231 px wide,
+# measured at 320-2560 px windows: half the window less 76 px on phones, less 81 px from 44rem (two columns), a quarter
+# less 57 px from 62rem (four columns), 231 px from 72rem. So a 1.75x-2x phone often needs no more pixels than the 1x copy
+# has. Keep this list in step with the .pane and .photo-pane CSS in index.html (a test checks those lines).
+SHEET_SIZES = ("(min-width: 72rem) 231px, (min-width: 62rem) calc(25vw - 57px), (min-width: 44rem) calc(50vw - 81px), "
+               "(min-width: 360px) calc(50vw - 76px), 118px")
 ABOUT_START, ABOUT_END = "<!-- ABOUT-KINDS:START", "<!-- ABOUT-KINDS:END -->"
 FRESH_START, FRESH_END, FRESH_COUNT = "<!-- FEEDBACK-FRESH:START", "<!-- FEEDBACK-FRESH:END -->", 4
 SALE_HERO = ("<!-- SALE-HERO:START", "<!-- SALE-HERO:END -->")
@@ -566,7 +587,7 @@ def update_home_sheet(rows, imgs, avoid=()):
     for c in cats:
         n, r = counts[c], face[c]
         items.append(f'<li><a class="tile perf" href="catalog/?cat={esc(slug(c))}">'
-                     f'<span class="pic"><img src="{esc(card_img(r["item"], imgs))}"{card_srcset(r["item"], imgs)} alt="{esc(r["title"])}" loading="lazy"></span>'
+                     f'<span class="pic"><img src="{esc(card_img(r["item"], imgs))}"{card_srcset_w(r["item"], imgs, SHEET_SIZES)} alt="{esc(r["title"])}" loading="lazy"></span>'
                      f'<b>{esc(FRIENDLY.get(c, c))}</b><span>{n} {"listing" if n == 1 else "listings"}</span></a></li>')
     replace_block(os.path.join(HERE, "index.html"), SHEET_START, SHEET_END, items)
     return cats, {face[c]["item"] for c in cats}

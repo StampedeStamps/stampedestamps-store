@@ -313,6 +313,59 @@ class BuildTests(unittest.TestCase):
                            ("about.html", ".tile .pic img")):
             self.assertRegex(read(name), re.escape(rule) + r" \{ display: block; width: 100%; height: 100%; object-fit: contain; \}", name)
 
+    def test_home_category_sheet_describes_copies_by_width(self):
+        # C2d (2026-11-04): Home's category tiles list both copies by their real pixel width plus SHEET_SIZES, so a phone
+        # whose box needs fewer pixels takes the 1x copy; src stays the card photo, both files exist, and at least half
+        # the tiles carry the new form (a tile without a current 1x copy has no srcset; one whose widths can't be read,
+        # or whose 1x copy is as wide as the card photo, keeps the "1x, 2x" form - neither should block the refresh)
+        home = read("index.html")
+        sheet = home[home.index(build.SHEET_START):home.index(build.SHEET_END)]
+        tiles = re.findall(r'<img src="([^"]+)" srcset="([^" ]+) (\d+)w, ([^" ]+) (\d+)w" sizes="([^"]+)"', sheet)
+        self.assertGreaterEqual(len(tiles), len(re.findall(r"<img ", sheet)) / 2)
+        for src, one, w1, two, w2, sizes in tiles:
+            self.assertEqual(two, src)
+            self.assertEqual(sizes, build.SHEET_SIZES)
+            self.assertRegex(one, "^" + re.escape(build.THUMB_1X_DIR) + r"/\d+(?:-e)?\.jpg$")
+            self.assertEqual(build.image_size(os.path.join(ROOT, *one.split("/")))[0], int(w1), one)
+            self.assertEqual(build.image_size(os.path.join(ROOT, *two.split("/")))[0], int(w2), two)
+            self.assertLess(int(w1), int(w2), one)
+        # SHEET_SIZES was measured against these CSS lines; if one changes, measure the boxes again and update both
+        for rule in (".pane { position: relative; background: var(--purple); padding: 14px 40px 14px 14px;",
+                     ".photo-pane .pic { height: 8.5rem;",
+                     ".photo-pane { grid-template-columns: repeat(2, minmax(0, 1fr)); }",
+                     ".photo-pane { grid-template-columns: repeat(4, minmax(0, 1fr)); }"):
+            self.assertIn(rule, home)
+
+    def test_card_srcset_w_falls_back_safely(self):
+        import shutil, tempfile
+        here = build.HERE
+        item = next(i for i in sorted(self.imgs) if build.card_srcset(i, self.imgs))
+        rel = self.imgs[item]
+        name = os.path.basename(rel)
+        parts = [rel, f"{build.THUMB_DIR}/{name}", f"{build.THUMB_1X_DIR}/{name}"]
+        with tempfile.TemporaryDirectory() as d:
+            try:
+                build.HERE = d
+                for i, p in enumerate(parts):
+                    dst = os.path.join(d, *p.split("/"))
+                    os.makedirs(os.path.dirname(dst), exist_ok=True)
+                    shutil.copyfile(os.path.join(ROOT, *p.split("/")), dst)
+                    os.utime(dst, (1000 + i, 1000 + i))      # the copies are newer than the photo
+                imgs = {item: rel}
+                w1 = build.image_size(os.path.join(d, *parts[2].split("/")))[0]
+                w2 = build.image_size(os.path.join(d, *parts[1].split("/")))[0]
+                self.assertEqual(build.card_srcset_w(item, imgs, "99px"),
+                                 f' srcset="{parts[2]} {w1}w, {parts[1]} {w2}w" sizes="99px"')
+                one = os.path.join(d, *parts[2].split("/"))
+                with open(one, "wb") as fh:                    # a 1x copy whose width can't be read: the 1x/2x form
+                    fh.write(b"x")
+                os.utime(one, (2000, 2000))
+                self.assertEqual(build.card_srcset_w(item, imgs, "99px"), build.card_srcset(item, imgs))
+                os.utime(one, (500, 500))                      # older than the photo: no srcset at all
+                self.assertEqual(build.card_srcset_w(item, imgs, "99px"), "")
+            finally:
+                build.HERE = here
+
     def test_card_srcset_never_offers_an_older_1x_copy(self):
         import tempfile
         here = build.HERE
