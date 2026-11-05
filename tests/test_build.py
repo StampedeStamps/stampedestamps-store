@@ -314,8 +314,8 @@ class BuildTests(unittest.TestCase):
             self.assertRegex(read(name), re.escape(rule) + r" \{ display: block; width: 100%; height: 100%; object-fit: contain; \}", name)
 
     def test_home_category_sheet_describes_copies_by_width(self):
-        # C2d (2026-11-04): Home's category tiles list both copies by their real pixel width plus SHEET_SIZES, so a phone
-        # whose box needs fewer pixels takes the 1x copy; src stays the card photo, both files exist, and at least half
+        # C2d (2026-11-04): Home's category tiles list both copies by their real pixel width plus sheet_sizes (how wide
+        # that photo is drawn), so a phone whose photo needs fewer pixels takes the 1x copy; src stays the card photo, both files exist, and at least half
         # the tiles carry the new form (a tile without a current 1x copy has no srcset; one whose widths can't be read,
         # or whose 1x copy is as wide as the card photo, keeps the "1x, 2x" form - neither should block the refresh)
         home = read("index.html")
@@ -324,17 +324,42 @@ class BuildTests(unittest.TestCase):
         self.assertGreaterEqual(len(tiles), len(re.findall(r"<img ", sheet)) / 2)
         for src, one, w1, two, w2, sizes in tiles:
             self.assertEqual(two, src)
-            self.assertEqual(sizes, build.SHEET_SIZES)
+            self.assertEqual(sizes, build.sheet_sizes(*build.image_size(os.path.join(ROOT, *two.split("/")))))
             self.assertRegex(one, "^" + re.escape(build.THUMB_1X_DIR) + r"/\d+(?:-e)?\.jpg$")
             self.assertEqual(build.image_size(os.path.join(ROOT, *one.split("/")))[0], int(w1), one)
             self.assertEqual(build.image_size(os.path.join(ROOT, *two.split("/")))[0], int(w2), two)
             self.assertLess(int(w1), int(w2), one)
-        # SHEET_SIZES was measured against these CSS lines; if one changes, measure the boxes again and update both
+        # sheet_sizes was measured against these CSS lines; if one changes, measure the boxes again and update both
         for rule in (".pane { position: relative; background: var(--purple); padding: 14px 40px 14px 14px;",
                      ".photo-pane .pic { height: 8.5rem;",
                      ".photo-pane { grid-template-columns: repeat(2, minmax(0, 1fr)); }",
                      ".photo-pane { grid-template-columns: repeat(4, minmax(0, 1fr)); }"):
             self.assertIn(rule, home)
+
+    def test_sheet_sizes_cover_the_measured_boxes(self):
+        # C2d: box widths of Home's .photo-pane .pic measured in Chrome on the live site, Wed 2026-11-04 10:42 PM ET
+        # (audit_tools\measure_tile_boxes.mjs; at 320 px the four columns differ, the widest is used). For photos of
+        # many shapes, sizes must name at least the drawn width (else a phone gets a soft photo) and at most 2 px more.
+        boxes = {320: 117.4, 360: 103.4, 390: 118.4, 412: 129.4, 430: 138.4, 600: 223.4, 703: 274.9, 704: 270.4,
+                 800: 318.4, 991: 413.9, 992: 190.4, 1024: 198.4, 1152: 230.4, 1280: 230.4, 1440: 230.4, 1920: 230.4,
+                 2560: 230.4}
+
+        def width_at(sizes, vw):
+            for part in sizes.split(", "):
+                m = re.fullmatch(r"\(min-width: (\d+)(rem|px)\) (.+)", part)
+                if m and vw < int(m.group(1)) * (16 if m.group(2) == "rem" else 1):
+                    continue
+                val = m.group(3) if m else part
+                c = re.fullmatch(r"calc\((\d+)vw - (\d+)px\)", val)
+                return vw * int(c.group(1)) / 100 - int(c.group(2)) if c else float(val[:-2])
+
+        for w, h in ((160, 320), (266, 320), (300, 320), (320, 320), (452, 320), (480, 320), (480, 270), (480, 160),
+                     (480, 100), (138, 160), (240, 160)):
+            sizes = build.sheet_sizes(w, h)
+            for vw, box in boxes.items():
+                drawn = min(box, build.SHEET_BOX_H * w / h)
+                self.assertGreaterEqual(width_at(sizes, vw), drawn - 0.01, (w, h, vw, sizes))
+                self.assertLessEqual(width_at(sizes, vw), drawn + 2, (w, h, vw, sizes))
 
     def test_card_srcset_w_falls_back_safely(self):
         import shutil, tempfile
@@ -353,16 +378,16 @@ class BuildTests(unittest.TestCase):
                     os.utime(dst, (1000 + i, 1000 + i))      # the copies are newer than the photo
                 imgs = {item: rel}
                 w1 = build.image_size(os.path.join(d, *parts[2].split("/")))[0]
-                w2 = build.image_size(os.path.join(d, *parts[1].split("/")))[0]
-                self.assertEqual(build.card_srcset_w(item, imgs, "99px"),
-                                 f' srcset="{parts[2]} {w1}w, {parts[1]} {w2}w" sizes="99px"')
+                w2, h2 = build.image_size(os.path.join(d, *parts[1].split("/")))
+                self.assertEqual(build.card_srcset_w(item, imgs, lambda w, h: f"{w}x{h}"),
+                                 f' srcset="{parts[2]} {w1}w, {parts[1]} {w2}w" sizes="{w2}x{h2}"')
                 one = os.path.join(d, *parts[2].split("/"))
                 with open(one, "wb") as fh:                    # a 1x copy whose width can't be read: the 1x/2x form
                     fh.write(b"x")
                 os.utime(one, (2000, 2000))
-                self.assertEqual(build.card_srcset_w(item, imgs, "99px"), build.card_srcset(item, imgs))
+                self.assertEqual(build.card_srcset_w(item, imgs, build.sheet_sizes), build.card_srcset(item, imgs))
                 os.utime(one, (500, 500))                      # older than the photo: no srcset at all
-                self.assertEqual(build.card_srcset_w(item, imgs, "99px"), "")
+                self.assertEqual(build.card_srcset_w(item, imgs, build.sheet_sizes), "")
             finally:
                 build.HERE = here
 
