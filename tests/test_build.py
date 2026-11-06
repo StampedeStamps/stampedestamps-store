@@ -117,6 +117,17 @@ class BuildTests(unittest.TestCase):
                 path = path + "index.html" if path.endswith("/") else path
                 self.assertTrue(os.path.exists(os.path.join(ROOT, path)), f"{name} -> {ref}")
 
+    def test_every_page_has_the_visitor_counter_once(self):
+        # Cloudflare Web Analytics (Douglas, Fri 2026-11-06; rule 8 allows this one beacon): every page the site serves
+        # carries it exactly once, before </body>, with build.py's token
+        self.assertRegex(build.CF_BEACON_TOKEN, r"^[0-9a-f]{32}$")
+        tag = build.CF_BEACON.strip()
+        for p in pages() + [os.path.join(ROOT, f) for f in build.PAGES]:
+            text = open(p, encoding="utf-8").read()
+            self.assertEqual(text.count("static.cloudflareinsights.com/beacon.min.js"), 1, os.path.basename(p))
+            self.assertIn(tag, text, os.path.basename(p))
+            self.assertLess(text.index(tag), text.index("</body>"), os.path.basename(p))
+
     def test_item_main_photo_loads_at_once_with_its_size(self):
         # W10 (2026-10-17): the item page's own photo is the biggest thing on the page - no lazy load, real width/height
         checked = 0

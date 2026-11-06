@@ -47,6 +47,14 @@ THUMB_1X_BOX = (240, 160)
 # step reads this exact line (1600 x 1600 without it) and keeps every full photo at 250,000 bytes or less.
 PHOTO_BOX = (1040, 1440)
 UTC = datetime.timezone.utc
+# Cloudflare Web Analytics, the store's one visitor counter: rule 8 of the project instructions allows this one
+# beacon and nothing else (Douglas, Fri 2026-11-06: "Yes, add Cloudflare"). Free, sets no cookies; the token is public
+# by design (it is printed in every page) and counts only on stampedestamps.store. Empty = no counter on the pages
+# this build writes. The five hand-written pages carry the same line just before </body>, and
+# tests/test_build.py checks that every page has it exactly once, with this token.
+CF_BEACON_TOKEN = "e80dcff4fc884bdcb8b52739a867f06a"
+CF_BEACON = (f"<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' "
+             f"data-cf-beacon='{{\"token\": \"{CF_BEACON_TOKEN}\"}}'></script>\n") if CF_BEACON_TOKEN else ""
 
 
 def esc(s):
@@ -444,7 +452,7 @@ def build_index(rows, imgs, meta):
   <ul class="stamps" id="cards">
 """
     out += "\n".join("    " + card(g, imgs) for g in ordered)
-    out += "\n  </ul>\n" + FOOT + SCRIPT + "</body>\n</html>\n"
+    out += "\n  </ul>\n" + FOOT + SCRIPT + CF_BEACON + "</body>\n</html>\n"
     return out
 
 
@@ -476,7 +484,7 @@ def build_item(r, rows_by_cat, imgs, issues=({}, {})):
         out += '  <section class="related"><h2>More from ' + esc(r["category"]) + '</h2>\n  <ul class="stamps">\n'
         out += "\n".join("    " + card([x], imgs) for x in rel)
         out += "\n  </ul></section>\n"
-    out += f'  <p class="note"><a href="/catalog/">Back to the full catalog</a></p>\n' + FOOT + "</body>\n</html>\n"
+    out += f'  <p class="note"><a href="/catalog/">Back to the full catalog</a></p>\n' + FOOT + CF_BEACON + "</body>\n</html>\n"
     return out
 
 
