@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Little Book of Stamp Rhymes | StampedeUSA</title>
+<meta name="description" content="A free illustrated book of 42 four-line stamp rhymes from the StampedeUSA packing table, each beside the stamp or cover it was written for. Download the PDF.">
+<link rel="canonical" href="https://www.stampedestamps.store/rhyme-book.html">
+<meta property="og:site_name" content="StampedeUSA">
+<meta property="og:type" content="website">
+<meta property="og:title" content="The Little Book of Stamp Rhymes | StampedeUSA">
+<meta property="og:description" content="A free illustrated book of 42 four-line stamp rhymes from the StampedeUSA packing table, each beside the stamp or cover it was written for. Download the PDF.">
+<meta property="og:url" content="https://www.stampedestamps.store/rhyme-book.html">
+<meta property="og:image" content="https://www.stampedestamps.store/rhyme-book/cover.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#4B006E">
+<link rel="icon" href="images/icon-32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+<link rel="preload" href="fonts/league-gothic-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+  /* Same look as Stamp Stories (stampedestamps.github.io/stampede-stories) */
+  @font-face {
+    font-family: "League Gothic";
+    font-style: normal;
+    font-weight: 400;
+    font-display: optional; /* W12 step 2: with the preload, used only if it is in hand by the first paint, so the page never jumps */
+    src: url("fonts/league-gothic-latin-400-normal.woff2") format("woff2");
+  }
+  :root {
+    --purple: #4B006E; --lilac: #D7B8F0; --page: #F6F4FA; --grid: #E7E2EF; --paper: #FFFFFF;
+    --ink: #1F1D2B; --cancel: #B3261E; --soft: #5B566A; --link: var(--purple); --head: var(--ink); /* W7: headings in ink; purple = clickable */
+    --edge: rgba(75,0,110,.55); --rule: #DCD5E6;
+    --gothic: "League Gothic","Oswald","Arial Narrow",Impact,sans-serif;
+    --serif: Charter,"Bitstream Charter","Sitka Text",Cambria,Georgia,serif;
+    color-scheme: light dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --page: #1C1A22; --grid: transparent; --paper: #2A2732; --ink: #ECE8F3; --cancel: #FF8A80;
+      --soft: #B9B2C6; --link: var(--lilac); --head: var(--ink); --edge: rgba(215,184,240,.5); --rule: #3A3644; }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+  body {
+    margin: 0; background-color: var(--page); color: var(--ink); font: 1.0625rem/1.6 var(--serif);
+    background-image: linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+    background-size: 24px 24px;
+  }
+  a { color: var(--link); text-underline-offset: .18em; text-decoration-thickness: 1px; }
+  a:hover { text-decoration-thickness: 2px; }
+  :focus-visible { outline: 3px solid var(--cancel); outline-offset: 3px; }
+  .skip { position: absolute; left: -999px; top: 0; }
+  .skip:focus { left: 1rem; top: .5rem; z-index: 9; background: var(--paper); padding: .4rem .7rem; }
+  h1, h2, h3 { font-family: var(--gothic); font-weight: 400; letter-spacing: .01em; line-height: 1.05; color: var(--head); margin: 0; }
+  main { display: block; max-width: 72rem; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+
+  /* ---------- Selvage header with the 5-page menu ---------- */
+  .selvage { background: var(--purple); color: #fff; }
+  .selvage a { color: #fff; }
+  .selvage :focus-visible { outline-color: #fff; }
+  .top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .4rem 1.5rem;
+    max-width: 72rem; margin: 0 auto; padding: .7rem 1rem; }
+  .mark { font-family: var(--gothic); font-size: 2rem; line-height: 1; text-decoration: none; letter-spacing: .02em; }
+  .mark small { font-family: var(--serif); font-size: .95rem; letter-spacing: 0; opacity: .92; margin-left: .45rem; }
+  .menu ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .2rem 1.1rem; }
+  .menu a { font-size: .98rem; text-decoration: none; padding: .15rem 0; border-bottom: 2px solid transparent; }
+  .menu a:hover { border-bottom-color: var(--lilac); }
+  .menu a[aria-current="page"] { border-bottom-color: #fff; }
+  /* menu links at least 24 px tall (WCAG 2.2 target size): 32 px, and 43 px on phones (W13) */
+  .menu a { display: inline-block; }
+  @media (max-width: 43.99rem) { .top { row-gap: 0; } .menu ul { gap: 0 .9rem; } .menu a { padding: .7rem 0 .3rem; } }
+  /* Header search on every page; every search box on the site searches our catalog (W4, Douglas 2026-10-17) */
+  .hfind { display: flex; gap: .4rem; margin: 0; }
+  .hfind input { width: 11rem; min-width: 0; font: inherit; font-size: 1rem; padding: .4rem .6rem; color: #1F1D2B; background: #fff; border: 2px solid #fff; border-radius: 3px; }
+  .hfind button { font-family: var(--gothic); font-size: 1.15rem; letter-spacing: .03em; line-height: 1; padding: .35rem .8rem; color: #4B006E; background: #fff; border: 2px solid #fff; border-radius: 3px; cursor: pointer; }
+  .hfind button:hover { text-decoration: underline; }
+  @media (min-width: 44rem) { .top { display: grid; grid-template-columns: auto 1fr auto; align-items: center; column-gap: 1.5rem; } .menu { justify-self: end; } }
+  @media (min-width: 44rem) and (max-width: 67.99rem) { .top { grid-template-columns: auto 1fr; } .hfind { grid-column: 1 / -1; justify-self: end; margin: 0 0 .6rem; } }
+  @media (max-width: 43.99rem) { .menu ul { gap: 0 .6rem; } .hfind { flex: 1 1 100%; margin: 0 0 .55rem; } .hfind input { flex: 1; width: auto; padding: .35rem .6rem; } }
+  @media (max-width: 22.49rem) { .menu ul { gap: 0 .3rem; } .menu a { font-size: .9rem; } }
+
+  /* ---------- Perforated stamp edge (same trick as Stamp Stories) ---------- */
+  .perf { position: relative; isolation: isolate; --r: 5px; }
+  .perf::before {
+    content: ""; position: absolute; inset: 0; z-index: -1; background: var(--paper);
+    -webkit-mask: radial-gradient(var(--r),#0000 96%,#000) round calc(-1.5*var(--r)) calc(-1.5*var(--r))/calc(3*var(--r)) calc(3*var(--r)),
+      linear-gradient(#000 0 0) no-repeat 50%/calc(100% - 3*var(--r)) calc(100% - 3*var(--r));
+    mask: radial-gradient(var(--r),#0000 96%,#000) round calc(-1.5*var(--r)) calc(-1.5*var(--r))/calc(3*var(--r)) calc(3*var(--r)),
+      linear-gradient(#000 0 0) no-repeat 50%/calc(100% - 3*var(--r)) calc(100% - 3*var(--r));
+  }
+  .edged { filter: drop-shadow(0 0 1px var(--edge)); }
+
+  /* ---------- Hero ---------- */
+  .hero h1 { font-size: clamp(2.6rem, 9vw, 4.4rem); max-width: 18ch; }
+  .hero .lede { font-size: 1.15rem; max-width: 50ch; margin: .8rem 0 1rem; }
+  .verse { font-style: italic; color: var(--soft); margin: 0; max-width: 50ch; }
+  .asof { color: var(--soft); font-size: .9rem; margin: .7rem 0 0; } /* source and date for the shop facts (W5) */
+
+  /* ---------- The "certificate": shop facts as a framed stamp ---------- */
+  .cert { --r: 7px; padding: 1.4rem; margin: 2rem 0 0; }
+  .cert .frame { border: 2px solid var(--purple); padding: 1.2rem 1rem; display: grid; gap: 1rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  @media (prefers-color-scheme: dark) { .cert .frame { border-color: var(--lilac); } }
+  .fact b { display: block; font-family: var(--gothic); font-weight: 400; font-size: clamp(2rem, 6vw, 2.8rem); line-height: 1; color: var(--head); }
+  .fact span { display: block; color: var(--soft); font-size: .95rem; margin-top: .25rem; }
+
+  /* ---------- Sections ---------- */
+  .block { margin: 2.8rem 0 0; scroll-margin-top: 1rem; }
+  .block > h2 { font-size: 2.3rem; border-bottom: 2px solid var(--purple); padding-bottom: .35rem; display: flex;
+    justify-content: space-between; align-items: baseline; gap: 1rem; flex-wrap: wrap; }
+  .block > h2 a { font-family: var(--serif); font-size: 1rem; letter-spacing: 0; }
+  @media (prefers-color-scheme: dark) { .block > h2 { border-color: var(--lilac); } }
+  .prose { max-width: 44rem; }
+  .prose p { margin: .9rem 0 0; font-size: 1.1rem; max-width: 50ch; }
+
+  /* Promises: perforated stamp cards */
+  .stamps { list-style: none; padding: 0; margin: 1.1rem 0 0; display: grid; gap: 1.1rem;
+    grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); }
+  .stamps li { display: flex; }
+  .stamps .card { flex: 1; padding: 1.3rem 1.2rem 1.1rem; }
+  .stamps h3 { font-size: 1.6rem; }
+  .stamps p { margin: .45rem 0 0; }
+
+  /* What you'll find: a sheet of perforated stamps, a real stamp in every tile (same as Home's category sheet) */
+  .pane { position: relative; background: var(--purple); padding: 14px 40px 14px 14px; display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr)); list-style: none; margin: 0; }
+  .pane li { display: flex; }
+  .tile { flex: 1; display: flex; flex-direction: column; justify-content: flex-start; gap: .45rem; min-height: 7.2rem;
+    padding: 1.1rem 1.05rem 1rem; text-decoration: none; color: var(--purple); }
+  .tile b { font-family: var(--gothic); font-weight: 400; font-size: 1.5rem; line-height: 1.02; }
+  .tile span { font-size: .95rem; color: var(--soft); }
+  .tile:hover b { text-decoration: underline 2px; text-underline-offset: .12em; }
+  .tile:focus-visible { outline-offset: -9px; }
+  .tile .pic { height: 8.5rem; display: flex; align-items: center; justify-content: center; margin-bottom: .2rem; }
+  .tile .pic img { display: block; width: 100%; height: 100%; object-fit: contain; } /* C2c: fill the box, so a srcset copy is never drawn smaller */
+  .pane .inscription { position: absolute; right: 0; top: 0; bottom: 0; width: 40px; display: flex; align-items: center;
+    justify-content: center; writing-mode: vertical-rl; color: #fff; font-size: .8rem; opacity: .9; margin: 0; }
+  @media (prefers-color-scheme: dark) { .tile { color: var(--lilac); } }
+
+  /* Find us */
+  .btn { display: block; text-align: center; background: var(--purple); color: #fff; font-family: var(--gothic);
+    font-size: 1.6rem; letter-spacing: .03em; line-height: 1; padding: .9rem 1rem; margin: 1.1rem 0 .6rem;
+    text-decoration: none; border-radius: 4px; border: 2px solid var(--purple); }
+  @media (prefers-color-scheme: dark) { .btn { border-color: var(--lilac); } }
+  /* A3b (2026-10-24): one action leads on each page (filled purple); every other button is this quieter outlined
+     style, same size and words, so the eye goes to the main action first */
+  .btn.alt { background: transparent; color: var(--link); border-color: var(--link); }
+  @media (prefers-reduced-motion: no-preference) {
+    .btn { transition: transform .08s ease-out; }
+    .btn:active { transform: translateY(1px); }
+  }
+  .links { list-style: none; padding: 0; margin: .6rem 0 0; display: flex; flex-wrap: wrap; gap: .4rem 1.8rem; }
+  .links a { font-size: 1.06rem; }
+
+  /* Footer */
+  footer.selvage { margin-top: 2rem; }
+  .foot { max-width: 72rem; margin: 0 auto; padding: 1.4rem 1rem 1.8rem; display: flex; flex-wrap: wrap; gap: .4rem 2rem; align-items: baseline; }
+  .sign { font-family: var(--gothic); font-size: 1.7rem; margin: 0; }
+  .foot p { margin: 0; }
+  .tags { flex-basis: 100%; font-size: .9rem; opacity: .85; }
+
+  @media (min-width: 44rem) {
+    .cert .frame { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .pane { padding: 16px 48px 16px 16px; }
+    .pane .inscription { width: 48px; }
+    .btn { display: inline-block; padding: .9rem 2.6rem; }
+  }
+  @media (min-width: 62rem) { .pane { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.rb { display:grid; gap:2rem; grid-template-columns: minmax(0,22rem) minmax(0,1fr); align-items:start; margin-top:1rem; }
+  @media (max-width: 760px) { .rb { grid-template-columns: minmax(0,1fr); } }
+  .rb img { width:100%; height:auto; display:block; border:1px solid var(--rule); box-shadow:0 2px 10px rgba(0,0,0,.15); background:#fff; }
+  .rb-pages { list-style:none; padding:0; margin:2rem 0 0; display:grid; gap:1rem; grid-template-columns:repeat(auto-fit,minmax(min(100%,14rem),1fr)); }
+  .rb-pages figcaption { font-size:.95rem; color:var(--soft); margin-top:.4rem; }
+  .rb .dl { display:inline-block; background:var(--purple); color:#fff; text-decoration:none; font-weight:700; padding:.75rem 1.2rem; border-radius:.4rem; margin:.4rem 0 .6rem; min-height:44px; }
+  .rb .dl:hover { text-decoration:underline; }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to the story</a>
+
+<!-- ===================== HEADER + MENU (same on all 5 pages) ===================== -->
+<header class="selvage">
+  <div class="top">
+    <a class="mark" href="index.html">STAMPede USA<small>stamps &amp; postal history</small></a>
+    <nav class="menu" aria-label="Main menu">
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="shop.html">Shop</a></li>
+        <li><a href="catalog/">Catalog</a></li>
+        <li><a href="sale.html">Sale</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="feedback.html">Feedback</a></li>
+      </ul>
+    </nav>
+    <form class="hfind" action="catalog/" method="get" role="search" aria-label="Site search">
+      <input id="hq" name="q" type="search" placeholder="Search the catalog" aria-label="Search the catalog" autocomplete="off">
+      <button type="submit">Search</button>
+    </form>
+  </div>
+</header>
+
+<main id="main">
+  <h1>The Little Book of Stamp Rhymes</h1>
+  <section class="rb" aria-label="Download the book">
+    <img src="rhyme-book/cover.jpg" width="560" height="724" alt="Cover of The Little Book of Stamp Rhymes: forty-two verses from the StampedeUSA packing table, 2026">
+    <div>
+      <p class="lede">Every parcel that leaves our shop carries a four-line rhyme about the stamp inside. The best forty-two are now a small free book, one verse to a page, each beside a photo of the stamp or cover it was written for.</p>
+      <p><a class="dl" href="rhyme-book/Little_Book_of_Stamp_Rhymes_2026.pdf" download>Download the free book (PDF, 12.9 MB, 44 pages)</a></p>
+      <p>Free to keep, free to pass along. Print it, keep it on your phone, or share this page with the collector in your family who still reads the packing slip before the stamps.</p>
+      <p>Inside: Insects and Spiders, the Marvel Super Heroes, Jim Henson and the Muppets, Comic Strip Classics, Alex Trebek, the 1941 China Clipper, an upside-down 1869 Locomotive cover, and thirty-five more.</p>
+      <p><a href="https://www.ebay.com/str/stampedeusa" target="stampede_ebay">See what is on the shelf now in our eBay store</a></p>
+    </div>
+  </section>
+  <ul class="rb-pages" aria-label="Three pages from the book">
+    <li><figure><img src="rhyme-book/page-insects.jpg" width="560" height="724" loading="lazy" alt="Book page: Insects and Spiders pane with its four-line verse"><figcaption>Insects and Spiders</figcaption></figure></li>
+    <li><figure><img src="rhyme-book/page-marvel.jpg" width="560" height="724" loading="lazy" alt="Book page: Marvel Comics Super Heroes pane with its four-line verse"><figcaption>Marvel Comics Super Heroes</figcaption></figure></li>
+    <li><figure><img src="rhyme-book/page-henson.jpg" width="560" height="724" loading="lazy" alt="Book page: Jim Henson and the Muppets pane with its four-line verse"><figcaption>Jim Henson and the Muppets</figcaption></figure></li>
+  </ul>
+</main>
+
+<!-- ===================== FOOTER (same on all 5 pages) ===================== -->
+<footer class="selvage">
+  <div class="foot">
+    <p class="sign">- StampedeUSA</p>
+    <p><a href="https://www.ebay.com/str/stampedeusa" target="stampede_ebay">Visit the StampedeUSA store on eBay</a></p>
+    <p><a href="https://stampedestamps.github.io/stampede-stories/index.html">Stamp Stories</a></p>
+    <p><a href="https://www.facebook.com/StampedeStamps" target="_blank">Facebook</a></p>
+    <p class="tags">#StampedeUSA #stamp #StampCollecting #Philately #USStamps #Stamps #Philatelist</p>
+  </div>
+</footer>
+
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "e80dcff4fc884bdcb8b52739a867f06a"}'></script>
+</body>
+</html>
