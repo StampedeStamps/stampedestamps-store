@@ -250,6 +250,7 @@ def head(title, desc, canonical, image):
         <li><a href="/sale.html">Sale</a></li>
         <li><a href="/about.html">About</a></li>
         <li><a href="/feedback.html">Feedback</a></li>
+        <li><a href="/rhyme-book.html">Free Rhyme Book</a></li>
       </ul>
     </nav>
     <form class="hfind" action="/catalog/" method="get" role="search" aria-label="Site search">
