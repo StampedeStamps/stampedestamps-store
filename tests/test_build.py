@@ -432,9 +432,11 @@ class BuildTests(unittest.TestCase):
 
     def test_menu_has_catalog_and_every_page_has_the_header_search(self):
         # W4 (Douglas 2026-10-17): Catalog joins the menu on every page; every page has the same header search
-        want = ["Home", "Shop", "Catalog", "Sale", "About", "Feedback"]
+        # Free Rhyme Book joins the menu on every page (Douglas 2026-11-15, "A/B/C ALL THREE APPROVED")
+        want = ["Home", "Shop", "Catalog", "Sale", "About", "Feedback", "Free Rhyme Book"]
         current = {"index.html": "Home", "shop.html": "Shop", "sale.html": "Sale", "about.html": "About",
-                   "feedback.html": "Feedback", "catalog/index.html": "Catalog"}
+                   "feedback.html": "Feedback", "catalog/index.html": "Catalog",
+                   "rhyme-book.html": "Free Rhyme Book"}
         item = os.path.join("catalog", "item", sorted(os.listdir(os.path.join(ROOT, "catalog", "item")))[0])
         current[item.replace(os.sep, "/")] = "Catalog"
         for name, here in current.items():
