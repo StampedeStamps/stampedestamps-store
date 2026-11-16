@@ -12,10 +12,12 @@ Inputs (written on OMEN every morning from the eBay export; never edited by hand
   data/issue_facts.csv     scott,issue,purpose,issued,first_day,face,color,design,inscribed,designer,printing,perf,format,
                            quantity,source,source_url      (hand-checked; changed only by a pull request)
   data/issue_titles.csv    title,scotts      (rebuilt every morning from listings.csv: see ISSUE_FIELDS below)
+  data/moved_items.csv     item,title,removed   (every item page that has left the catalog; this build adds the ones
+                           that left today. A row is never edited by hand: see MOVED_CSV below)
 Outputs (committed; GitHub Pages and later AWS Amplify serve them as plain files):
-  catalog/index.html, catalog/item/<item>.html, sitemap.xml, robots.txt, and the marker blocks inside the hand-written
-  pages: Shop's category list, Home's category sheet and Newly listed, the Sale page, About's "What you'll find" and
-  Feedback's "Fresh on the shelf".
+  catalog/index.html, catalog/item/<item>.html, the moved pages catalog/item/<old item>.html (see MOVED_CSV),
+  sitemap.xml, robots.txt, and the marker blocks inside the hand-written pages: Shop's category list, Home's category
+  sheet and Newly listed, the Sale page, About's "What you'll find" and Feedback's "Fresh on the shelf".
 
 The catalog build is deterministic: the same inputs give byte-identical output (tests/test_build.py checks it). The Sale
 page also depends on the clock (auctions that have ended drop off); STORE_BUILD_NOW=2026-10-16T19:00:00Z pins it.
@@ -29,6 +31,20 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 SITE = "https://www.stampedestamps.store"
 STORE = "https://www.ebay.com/str/stampedeusa"
 PAGES = ["index.html", "shop.html", "sale.html", "about.html", "feedback.html"]
+# Hand-written pages the sitemap lists besides PAGES (the build does not rewrite them). Claude 2026-11-15: the Rhyme Book
+# page went live that evening and was in no sitemap.
+SITEMAP_EXTRA = ["rhyme-book.html"]
+# Relisted stamps keep their address working (Claude 2026-11-15, after the Search Console page-indexing report). eBay gives
+# a relisted stamp a NEW item number, so the old catalog address went 404 while Google still listed it: on 11-15, 114 of
+# the 223 item pages Google had indexed were ended listings, and 87 of those were the same title live again under one
+# new number. data/moved_items.csv keeps every item page that has left the catalog (item, title, removed = the feed date
+# it left). Each build, an old address whose title matches exactly ONE live listing gets a small page that sends the
+# visitor on at once: an instant meta refresh, which Google reads as a permanent redirect and whose target it treats as
+# the page to show (developers.google.com/search/docs/crawling-indexing/301-redirects; GitHub Pages has no server-side
+# redirects). No match, or two or more: no page, so the address stays 404. Moved pages carry no visitor counter (one
+# arrival would count twice) and are not in the sitemap.
+MOVED_CSV = os.path.join("data", "moved_items.csv")
+MOVED_MARK = '<meta name="stampede-moved-to"'
 FORMAT = {"FIXED_PRICE": "Buy It Now", "AUCTION": "Auction"}
 RELATED = 6
 # W2 (Claude 2026-10-17): cards show a small copy of each photo, made by the private photo step on OMEN (Pillow; this
@@ -749,10 +765,105 @@ def write(path, text):
         f.write(text)
 
 
+# ---- moved pages (Claude 2026-11-15; see MOVED_CSV above) ----
+
+def title_key(t):
+    """A listing title compared the way a relist repeats it: entities decoded, case and spacing ignored."""
+    return re.sub(r"\s+", " ", html.unescape(t)).strip().lower()
+
+
+def page_title(text):
+    """The listing title an item page was built for, read from its <title>; None for a moved page or no such title."""
+    if MOVED_MARK in text:
+        return None
+    m = re.search(r"<title>(.*?) \| StampedeUSA</title>", text, re.S)
+    return html.unescape(m.group(1)) if m else None
+
+
+def load_moved():
+    path = os.path.join(HERE, MOVED_CSV)
+    return {r["item"]: r for r in read_csv(path)} if os.path.exists(path) else {}
+
+
+def write_moved(moved):
+    with open(os.path.join(HERE, MOVED_CSV), "w", encoding="utf-8", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=["item", "title", "removed"], lineterminator="\n")
+        w.writeheader()
+        for k in sorted(moved):
+            w.writerow({x: moved[k][x] for x in ("item", "title", "removed")})
+
+
+def drop_returned(moved, live):
+    """A listing that dropped out of one export and is live again is not 'moved': its row goes. Returns the items dropped."""
+    back = [k for k in moved if k in live]
+    for k in back:
+        del moved[k]
+    return back
+
+
+def note_removed(moved, item_dir, live, today):
+    """Before the catalog folder is rebuilt: record each item page whose listing has gone (not live, not yet recorded,
+    not itself a moved page). Returns how many rows were added."""
+    added = 0
+    for f in sorted(os.listdir(item_dir)) if os.path.isdir(item_dir) else []:
+        m = re.fullmatch(r"(\d+)\.html", f)
+        if not m or m.group(1) in live or m.group(1) in moved:
+            continue
+        with open(os.path.join(item_dir, f), encoding="utf-8") as fh:
+            t = page_title(fh.read())
+        if t:
+            moved[m.group(1)] = {"item": m.group(1), "title": t, "removed": today}
+            added += 1
+    return added
+
+
+def moved_targets(moved, rows):
+    """{old item: live row} for each recorded old address whose title matches exactly one live listing."""
+    live = {r["item"] for r in rows}
+    by_key = {}
+    for r in rows:
+        by_key.setdefault(title_key(r["title"]), []).append(r)
+    out = {}
+    for old, rec in moved.items():
+        hits = by_key.get(title_key(rec["title"]), [])
+        if old not in live and len(hits) == 1:
+            out[old] = hits[0]
+    return out
+
+
+def build_moved(r):
+    """The page left at an old address: sends the visitor (and Google) on to the stamp's live page at once."""
+    url = f"/catalog/item/{r['item']}.html"
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{esc(r['title'])} | StampedeUSA</title>
+<meta http-equiv="refresh" content="0; url={url}">
+<link rel="canonical" href="{SITE}{url}">
+{MOVED_MARK} content="{esc(r['item'])}">
+<link rel="icon" href="/images/icon-32.png" type="image/png" sizes="32x32">
+</head>
+<body>
+<p>This stamp has a new listing: <a href="{url}">{esc(r['title'])}</a>.</p>
+</body>
+</html>
+"""
+
+
 def main():
     rows, imgs, meta = load()
     now = build_now()
+    lastmod = meta.get("as_of", "")
     out_dir = os.path.join(HERE, "catalog")
+    # before the catalog folder is rebuilt: record the item pages whose listing has gone since the last build, so a
+    # relisted stamp's old address can send visitors on to its live page
+    moved = load_moved()
+    live = {r["item"] for r in rows}
+    back = drop_returned(moved, live)
+    if note_removed(moved, os.path.join(out_dir, "item"), live, lastmod) or back:
+        write_moved(moved)
     if os.path.isdir(out_dir):
         shutil.rmtree(out_dir)             # stale item pages of sold listings must not linger
     small_dir = os.path.join(HERE, *THUMB_DIR.split("/"))
@@ -778,9 +889,11 @@ def main():
     issues = load_issues()
     for r in rows:
         write(os.path.join(out_dir, "item", f"{r['item']}.html"), build_item(r, by_cat, imgs, issues))
+    targets = moved_targets(moved, rows)
+    for old, r in sorted(targets.items()):
+        write(os.path.join(out_dir, "item", f"{old}.html"), build_moved(r))
     with_facts = sum(1 for r in rows if issue_box(r["title"], issues))
-    lastmod = meta.get("as_of", "")
-    urls = [f"{SITE}/{p}" if p != "index.html" else f"{SITE}/" for p in PAGES] + [f"{SITE}/catalog/"] + \
+    urls = [f"{SITE}/{p}" if p != "index.html" else f"{SITE}/" for p in PAGES + SITEMAP_EXTRA] + [f"{SITE}/catalog/"] + \
            [f"{SITE}/catalog/item/{r['item']}.html" for r in rows]
     sm = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
     sm += "".join(f"  <url><loc>{esc(u)}</loc><lastmod>{lastmod}</lastmod></url>\n" for u in urls) + "</urlset>\n"
@@ -806,7 +919,8 @@ def main():
           f"{with_facts} with issue facts), sitemap {len(urls)} urls, "
           f"shop categories {ncat}, home newly listed {len(newest)}, home category sheet {len(sheet)}, "
           f"about tiles {len(tiles)}, feedback fresh {len(fresh)}, sale markdowns {len(marked)}, "
-          f"sale ending soonest {len(soon)} (clock {now:%Y-%m-%dT%H:%M:%SZ}), as of {lastmod}")
+          f"sale ending soonest {len(soon)} (clock {now:%Y-%m-%dT%H:%M:%SZ}), as of {lastmod}, "
+          f"moved pages {len(targets)} (of {len(moved)} recorded)")
 
 
 if __name__ == "__main__":
