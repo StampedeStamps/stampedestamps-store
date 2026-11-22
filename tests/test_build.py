@@ -587,6 +587,8 @@ class BuildTests(unittest.TestCase):
         self.assertEqual(got, {k: r["item"] for k, r in build.moved_targets(moved, self.rows).items()})
 
     def test_moved_record_is_sorted_lf_and_never_lists_a_live_listing(self):
+        # LF holds after ANY build, however git checked the file out: build.py writes the record on every run
+        # (MovedPageRuleTests.test_a_windows_checkout_of_the_record_loads_the_same_and_is_rewritten_lf)
         raw = open(os.path.join(ROOT, *build.MOVED_CSV.split(os.sep)), "rb").read()
         self.assertNotIn(b"\r", raw)
         recs = list(csv.DictReader(raw.decode("utf-8").splitlines()))
@@ -988,6 +990,57 @@ class MovedPageRuleTests(unittest.TestCase):
         self.assertEqual(build.drop_returned(moved, {"101", "300"}), ["101"])
         self.assertEqual(sorted(moved), ["100"])
         self.assertEqual(build.drop_returned(moved, set()), [])
+
+    def _record_in(self, folder, raw):
+        os.makedirs(os.path.join(folder, "data"))
+        with open(os.path.join(folder, *build.MOVED_CSV.split(os.sep)), "wb") as f:
+            f.write(raw)
+
+    def test_a_windows_checkout_of_the_record_loads_the_same_and_is_rewritten_lf(self):
+        # 2026-11-21, found before the merge: with core.autocrlf=true git writes data/moved_items.csv with CRLF, and on
+        # a day when no listing ended nothing rewrote it, so the record's own test failed in the morning refresh
+        import tempfile
+        from unittest import mock
+        lf = b'item,title,removed\n100,"Scott #1, Used",2026-11-01\n101,Scott #2 &amp; 3,2026-11-02\n'
+        with tempfile.TemporaryDirectory() as a, tempfile.TemporaryDirectory() as b:
+            self._record_in(a, lf)
+            self._record_in(b, lf.replace(b"\n", b"\r\n"))
+            with mock.patch.object(build, "HERE", a):
+                from_lf = build.load_moved()
+            with mock.patch.object(build, "HERE", b):
+                from_crlf = build.load_moved()
+                build.write_moved(from_crlf)
+            self.assertEqual(from_crlf, from_lf)
+            self.assertEqual(from_lf["100"], {"item": "100", "title": "Scott #1, Used", "removed": "2026-11-01"})
+            with open(os.path.join(b, *build.MOVED_CSV.split(os.sep)), "rb") as f:
+                self.assertEqual(f.read(), lf)                      # byte for byte the LF file, sorted, no CR
+
+    def test_a_damaged_row_of_the_record_is_left_out_and_never_stops_the_build(self):
+        import tempfile
+        from unittest import mock
+        raw = (b"item,title,removed\n"
+               b"100,Whole row,2026-11-01\n"
+               b"101,,2026-11-01\n"                 # no title
+               b"abc,Not an item number,2026-11-01\n"
+               b"102,Bad date,11/01/2026\n"
+               b"103,Cut short")                     # a write that never finished
+        with tempfile.TemporaryDirectory() as d:
+            self._record_in(d, raw)
+            with mock.patch.object(build, "HERE", d):
+                self.assertEqual(sorted(build.load_moved()), ["100"])
+        with tempfile.TemporaryDirectory() as d:        # no record at all, and a file with another header
+            with mock.patch.object(build, "HERE", d):
+                self.assertEqual(build.load_moved(), {})
+            self._record_in(d, b"a,b\n1,2\n")
+            with mock.patch.object(build, "HERE", d):
+                self.assertEqual(build.load_moved(), {})
+
+    def test_the_moved_page_names_the_live_listing_and_claims_nothing_about_the_stamp(self):
+        # rule 2 (no invented facts): the old and the new listing can be two copies of one issue, so the page says where
+        # the title is listed now and nothing about it being the same stamp
+        page = build.build_moved({"item": "200", "title": "Scott #1"})
+        self.assertIn('<p>Now listed here: <a href="/catalog/item/200.html">Scott #1</a>.</p>', page)
+        self.assertNotIn("This stamp", page)
 
 
 if __name__ == "__main__":

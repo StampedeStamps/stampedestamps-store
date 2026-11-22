@@ -781,11 +781,21 @@ def page_title(text):
 
 
 def load_moved():
+    """The record of item pages that have left the catalog, {item: row}. A row that is not whole (no item number, no
+    title, no date) is left out rather than stopping the build: this record is the one thing the moved pages keep from
+    day to day, and the daily catalog never waits on it. Reads either line ending (git on Windows checks the file out
+    with CRLF)."""
     path = os.path.join(HERE, MOVED_CSV)
-    return {r["item"]: r for r in read_csv(path)} if os.path.exists(path) else {}
+    out = {}
+    for r in read_csv(path) if os.path.exists(path) else []:
+        item, title, removed = (r.get("item") or "").strip(), r.get("title") or "", (r.get("removed") or "").strip()
+        if item.isdigit() and title.strip() and re.fullmatch(r"\d{4}-\d{2}-\d{2}", removed):
+            out[item] = {"item": item, "title": title, "removed": removed}
+    return out
 
 
 def write_moved(moved):
+    """Sorted by item number, LF line ends: every build writes it, so the file never depends on how git checked it out."""
     with open(os.path.join(HERE, MOVED_CSV), "w", encoding="utf-8", newline="") as f:
         w = csv.DictWriter(f, fieldnames=["item", "title", "removed"], lineterminator="\n")
         w.writeheader()
@@ -846,7 +856,7 @@ def build_moved(r):
 <link rel="icon" href="/images/icon-32.png" type="image/png" sizes="32x32">
 </head>
 <body>
-<p>This stamp has a new listing: <a href="{url}">{esc(r['title'])}</a>.</p>
+<p>Now listed here: <a href="{url}">{esc(r['title'])}</a>.</p>
 </body>
 </html>
 """
@@ -861,9 +871,13 @@ def main():
     # relisted stamp's old address can send visitors on to its live page
     moved = load_moved()
     live = {r["item"] for r in rows}
-    back = drop_returned(moved, live)
-    if note_removed(moved, os.path.join(out_dir, "item"), live, lastmod) or back:
-        write_moved(moved)
+    drop_returned(moved, live)
+    left_on = lastmod if re.fullmatch(r"\d{4}-\d{2}-\d{2}", lastmod) else f"{now:%Y-%m-%d}"
+    note_removed(moved, os.path.join(out_dir, "item"), live, left_on)
+    # written on EVERY build, changed or not: after a pull on Windows git leaves this file with CRLF line ends, and on a
+    # day when no listing ended nothing else would rewrite it (found 2026-11-21, before the merge: the record's own
+    # test failed against the file as git checked it out, which would have stopped that morning's refresh)
+    write_moved(moved)
     if os.path.isdir(out_dir):
         shutil.rmtree(out_dir)             # stale item pages of sold listings must not linger
     small_dir = os.path.join(HERE, *THUMB_DIR.split("/"))
