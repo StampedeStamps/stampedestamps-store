@@ -328,7 +328,7 @@ class IssuePageRuleTests(unittest.TestCase):
         imgs = {"900": "images/catalog/900.jpg", "200": "images/catalog/200.jpg"}
         page = build.build_issue("1", keys, facts, shelf, imgs, META)
         more = section(page, "More issues on the shelf")
-        self.assertEqual(re.findall(r'href="/catalog/issue/scott-(\w+)\.html"><span class="ph"><img src="/([^"]+)"', more),
+        self.assertEqual(re.findall(r'href="/catalog/issue/scott-(\w+)\.html"><span class="ph"><img src="/([^"]+)"', more or ""),
                          [("2", "images/catalog/200.jpg")])                             # 3 has only the lot: no card
 
     # ---- the index ----
