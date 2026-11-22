@@ -16,6 +16,8 @@ Inputs (written on OMEN every morning from the eBay export; never edited by hand
                            that left today. A row is never edited by hand: see MOVED_CSV below)
 Outputs (committed; GitHub Pages and later AWS Amplify serve them as plain files):
   catalog/index.html, catalog/item/<item>.html, the moved pages catalog/item/<old item>.html (see MOVED_CSV),
+  the issue pages catalog/issue/index.html and catalog/issue/scott-<number>.html (one per checked Scott number, listed
+  or not: see ISSUE_DIR),
   sitemap.xml, robots.txt, and the marker blocks inside the hand-written pages: Shop's category list, Home's category
   sheet and Newly listed, the Sale page, About's "What you'll find" and Feedback's "Fresh on the shelf".
 
@@ -128,8 +130,63 @@ def load_issues():
     return facts, titles
 
 
-def issue_sources(found):
-    """The line under the facts: which authority checked them, with a link to each web source."""
+# Issue pages (Claude 2026-11-21): one page per checked Scott number at /catalog/issue/scott-<number>.html, built from
+# data/issue_facts.csv alone, so its address stays for months whether or not anything is listed, and every morning's
+# build links it to whichever listings are live. Why: on 2026-11-15 Google had indexed all 6 stable pages but only 109
+# of the 440 live item pages, and an item page's address ends when eBay gives a relisted stamp a new item number. These
+# pages are a TEST of the claim that stable pages get indexed and stay indexed (not proven: read Search Console's page
+# lists against the 2026-11-15 baseline). The page builders are further down (build_issue, build_issue_index).
+# A row gets a page only when its key is a well-formed Scott number: a capital prefix of up to four letters, a number
+# that does not start with 0, at most one letter after it. "R024C" (a listing title's slip) gets none.
+ISSUE_DIR = "issue"
+SCOTT_KEY = re.compile(r"([A-Z]{0,4})([1-9]\d{0,3})([A-Z]?)", re.ASCII)
+# The Scott catalog writes a letter after the number small (a pane, block or variety: 1368 "a. Block of 4") unless the
+# number is a major number of its own. Each number here was read off the catalog page: 1338F on 2026-11-21. A new row
+# for a major number with a capital letter is added here in the same pull request.
+SCOTT_CAPITAL = {"1338F"}
+
+
+def scott_parts(key):
+    """("", 1016, "") / ("C", 3, "") / ("", 1830, "A") for a well-formed Scott number as issue_facts.csv keys it; else None."""
+    m = SCOTT_KEY.fullmatch(key) if isinstance(key, str) else None
+    return (m.group(1), int(m.group(2)), m.group(3)) if m else None
+
+
+def scott_text(key):
+    """The number as the Scott catalog writes it (1830a, R5c, 1338F); a key that is not a Scott number stays as it is."""
+    p = scott_parts(key)
+    return key if not p or key in SCOTT_CAPITAL else f"{p[0]}{p[1]}{p[2].lower()}"
+
+
+def issue_url(key):
+    """The issue page's address, /catalog/issue/scott-1016.html; None for a key that gets no page."""
+    return f"/catalog/{ISSUE_DIR}/scott-{key.lower()}.html" if scott_parts(key) else None
+
+
+def issue_keys(facts):
+    """Every Scott number that gets a page, in catalog order: plain numbers by size, then the lettered prefixes."""
+    def order(key):
+        prefix, number, suffix = scott_parts(key)
+        return (prefix != "", prefix, number, suffix)
+    return sorted((k for k in facts if scott_parts(k)), key=order)
+
+
+def issue_shelf(rows, issues):
+    """{Scott number: its live listings, newest first}. A listing belongs to every number its exact title is mapped to,
+    and to none unless all of them have checked facts (issue_box's rule: a lot is never described in part)."""
+    facts, titles = issues
+    shelf = {}
+    for r in sorted(rows, key=lambda r: r["item"], reverse=True):
+        scotts = titles.get(r["title"]) or []
+        if all(s in facts for s in scotts):
+            for s in dict.fromkeys(scotts):
+                shelf.setdefault(s, []).append(r)
+    return shelf
+
+
+def issue_sources(found, tail=" The eBay listing shows this item's own photos and condition."):
+    """The line under the facts: which authority checked them, with a link to each web source. `tail` is the closing
+    sentence about the listing (an issue page with several listings, or none, words it differently)."""
     links = []
     for f in found:
         for u in (f.get("source_url") or "").split():
@@ -146,31 +203,38 @@ def issue_sources(found):
             f'<a href="{esc(us[0])}">{esc(h)}</a>' if len(us) == 1 else
             f'{esc(h)} (' + ", ".join(f'<a href="{esc(u)}">{i}</a>' for i, u in enumerate(us, 1)) + ")"
             for h, us in hosts.items()) + ".")
-    return " ".join(said) + " The eBay listing shows this item's own photos and condition."
+    return " ".join(said) + tail
 
 
 def issue_box(title, issues):
     """The item page's "About this issue" section, or "" when the title is not mapped or any of its Scott numbers has
-    no checked facts (a lot is never described in part). One number: the full fact list. Several: one line each."""
+    no checked facts (a lot is never described in part). One number: the full fact list. Several: one line each.
+    Each number links to its issue page (issue_url), where every listing of that issue is shown."""
     facts, titles = issues
     scotts = titles.get(title)
     if not scotts or any(s not in facts for s in scotts):
         return ""
     found = [facts[s] for s in scotts]
     li = lambda label, text: f"      <li><b>{label}</b><span>{esc(text)}</span></li>\n"
+    num = lambda s: (f'<a href="{issue_url(s)}">Scott #{esc(scott_text(s))}</a>' if issue_url(s)
+                     else f"Scott #{esc(scott_text(s))}")
+    more = ""
     if len(found) == 1:
         h2 = "About this issue"
         lis = "".join(li(label, found[0][k]) for k, label in ISSUE_FIELDS if found[0].get(k))
+        if issue_url(scotts[0]):
+            more = (f'    <p class="note">More on this issue: <a href="{issue_url(scotts[0])}">'
+                    f'Scott #{esc(scott_text(scotts[0]))}, {esc(found[0]["issue"])}</a>.</p>\n')
     elif len({f["issue"] for f in found}) == 1 and len({f["issued"] for f in found}) == 1:
         h2 = "About this issue"                     # one issue, several designs (a se-tenant block or sheet)
         lis = li("Issue", found[0]["issue"]) + li("Issued", found[0]["issued"]) + "".join(
-            li(f"Scott #{esc(s)}", ", ".join(v for v in (f.get("design"), f["face"]) if v)) for s, f in zip(scotts, found))
+            li(num(s), ", ".join(v for v in (f.get("design"), f["face"]) if v)) for s, f in zip(scotts, found))
     else:
         h2 = "About these issues"
-        lis = "".join(li(f"Scott #{esc(s)}", ", ".join(v for v in (f["issue"], f["issued"], f["face"]) if v))
+        lis = "".join(li(num(s), ", ".join(v for v in (f["issue"], f["issued"], f["face"]) if v))
                       for s, f in zip(scotts, found))
     return (f'  <section class="issue" aria-labelledby="issue-h">\n    <h2 id="issue-h">{h2}</h2>\n'
-            f'    <ul class="facts">\n{lis}    </ul>\n    <p class="note">{issue_sources(found)}</p>\n  </section>\n')
+            f'    <ul class="facts">\n{lis}    </ul>\n    <p class="note">{issue_sources(found)}</p>\n{more}  </section>\n')
 
 
 def parse_utc(s):
@@ -435,7 +499,10 @@ SCRIPT = """<script>
 """
 
 
-def build_index(rows, imgs, meta):
+def build_index(rows, imgs, meta, numbers=0):
+    """The catalog page. `numbers` is how many issue pages this build writes: with any, the "as of" line links to their
+    index (never a link to a page that is not there)."""
+    numbers_link = f' <a href="/catalog/{ISSUE_DIR}/">Find a stamp by Scott number</a>.' if numbers else ""
     groups = {}
     for r in rows:
         groups.setdefault(r["title"], []).append(r)
@@ -455,7 +522,7 @@ def build_index(rows, imgs, meta):
     <h1>The whole shelf, one page.</h1>
     <p class="lede">All {n} StampedeUSA listings in one place. Search by Scott number, year, country or subject, or narrow it by
       category. Every stamp opens on eBay, where the price, bids and photos are always current.</p>
-    <p class="asof">Listings as of {esc(meta.get("as_of", ""))}.</p>
+    <p class="asof">Listings as of {esc(meta.get("as_of", ""))}.{numbers_link}</p>
     <form class="find" role="search" onsubmit="return false">
       <div><label for="q">Search the catalog</label><input id="q" type="search" placeholder="Try Batman, eagle, Boston or 1962" autocomplete="off"></div>
       <div><label for="cat">Category</label><select id="cat"><option value="">All categories</option><optgroup label="Kinds of stock">{kind_opts}</optgroup><optgroup label="eBay categories">{cat_opts}</optgroup></select></div>
@@ -862,6 +929,151 @@ def build_moved(r):
 """
 
 
+# ---- issue pages (Claude 2026-11-21; see ISSUE_DIR above) ----
+# A page has three states and keeps its address in all of them: one listing (the item page's own layout, with the one
+# filled button to the eBay listing), several listings (a card and an outlined eBay button for each; none leads), and no
+# listing (the facts and the nearby issues carry the page; it is never hidden from search engines and never redirects).
+# The build knows only which titles are mapped to a number, not what is in stock, so the no-listing words say "filed
+# under", never that we have none. Rule 2: every fact shown is a checked field copied as written, with its source named.
+
+def issue_listing_card(r, imgs):
+    """One live listing on its issue's page: the catalog's card (it opens the listing's catalog page), then a button
+    to the eBay listing itself."""
+    fmt = FORMAT.get(r["format"], r["format"])
+    return (f'<li><a class="card perf edged" href="/catalog/item/{esc(r["item"])}.html">'
+            f'{picture(r["item"], imgs, r["title"], r["category"], ("ph", "tx"))}'
+            f'<span class="badge">{esc(fmt)}</span><span class="t">{esc(r["title"])}</span>'
+            f'<span class="c">{esc(r["category"])}</span></a>'
+            f'<a class="btn alt" href="{esc(r["ebay_url"])}" target="stampede_ebay" '
+            f'aria-label="See it on eBay: {esc(r["title"])}">See it on eBay</a></li>')
+
+
+def issue_card(key, f, r, imgs):
+    """Another issue as a card: the photo of its newest photographed listing, then its number, name and date. It opens
+    that issue's page, so the stable pages link to each other."""
+    return (f'<li class="edged"><a class="card perf" href="{issue_url(key)}">'
+            f'<span class="ph"><img src="/{esc(card_img(r["item"], imgs))}"{card_srcset(r["item"], imgs, "/")} '
+            f'alt="{esc(r["title"])}" loading="lazy"></span>'
+            f'<span class="t">Scott #{esc(scott_text(key))}: {esc(f["issue"])}</span>'
+            f'<span class="c">{esc(f["issued"])}</span></a></li>')
+
+
+def build_issue(key, keys, facts, shelf, imgs, meta):
+    """One issue page. `keys` is issue_keys(): every Scott number with a page, in catalog order. `shelf` is issue_shelf()."""
+    f, n, i = facts[key], scott_text(key), keys.index(key)
+    mine = shelf.get(key, [])
+    shot = next((r for r in mine if r["item"] in imgs), None)
+    out = head(f"Scott #{n}: {f['issue']}, {f['issued']} | StampedeUSA",
+               f"Scott #{n}, {f['issue']}: issued {f['issued']}, face value {f['face']}. Checked facts, and our eBay "
+               "listings of this issue when it is on the shelf.",
+               SITE + issue_url(key), imgs[shot["item"]] if shot else "images/hero.jpg")
+    out += (f'  <p class="crumbs"><a href="/catalog/">Catalog</a> &rsaquo; '
+            f'<a href="/catalog/{ISSUE_DIR}/">Scott numbers</a></p>\n')
+    h1 = f'      <h1>Scott #{esc(n)} <span>{esc(f["issue"])}</span></h1>\n'
+    key_line = f'      <p class="key">Face value {esc(f["face"])}. Issued {esc(f["issued"])}.</p>\n'
+    asof = f'      <p class="asof">Listings as of {esc(meta.get("as_of", ""))}.</p>\n'
+    if len(mine) == 1:
+        r = mine[0]
+        page = f'/catalog/item/{esc(r["item"])}.html'
+        out += (f'  <div class="item">\n    <div class="item-stamp perf edged"><div class="frame"><a href="{page}">'
+                f'{picture(r["item"], imgs, r["title"], r["category"], ("ph", "tx"), main=True)}</a></div></div>\n'
+                f'    <div class="buy">\n{h1}{key_line}'
+                f'      <a class="btn" href="{esc(r["ebay_url"])}" target="stampede_ebay">See it on eBay</a>\n'
+                f'      <p class="note">On the shelf now: <a href="{page}">{esc(r["title"])}</a>. '
+                f'Price, bids and every photo are on the eBay listing.</p>\n{asof}    </div>\n  </div>\n')
+        tail = " The eBay listing shows this item's own photos and condition."
+    elif mine:                                  # the cards come straight under the heading; the words about them follow
+        out += (f'  <div class="item solo">\n    <div class="buy">\n{h1}{key_line}    </div>\n  </div>\n'
+                '  <section class="related shelf" aria-labelledby="shelf-h"><h2 id="shelf-h">On the shelf now</h2>\n'
+                '  <ul class="stamps">\n' + "\n".join("    " + issue_listing_card(r, imgs) for r in mine)
+                + f'\n  </ul>\n      <p class="note">{len(mine)} listings of this issue are on the shelf. Each button '
+                f'opens its listing on eBay, where the price, bids and every photo are current.</p>\n{asof}  </section>\n')
+        tail = " Each eBay listing shows that item's own photos and condition."
+    else:                                       # the facts lead; the words about the shelf come after them, below
+        out += (f'  <div class="item solo">\n    <div class="buy">\n{h1}{key_line}'
+                '      <a class="btn" href="/catalog/">Browse the full catalog</a>\n    </div>\n  </div>\n')
+        tail = ""
+    li = lambda label, text: f"      <li><b>{label}</b><span>{esc(text)}</span></li>\n"
+    out += ('  <section class="issue" aria-labelledby="issue-h">\n    <h2 id="issue-h">About this issue</h2>\n'
+            '    <ul class="facts">\n' + "".join(li(label, f[k]) for k, label in ISSUE_FIELDS if f.get(k))
+            + f'    </ul>\n    <p class="note">{issue_sources([f], tail)}</p>\n  </section>\n')
+    if not mine:                                # said after the facts, so the page leads with what it knows
+        out += ('  <section class="issue" aria-labelledby="shelf-h">\n    <h2 id="shelf-h">On the shelf</h2>\n'
+                '    <p class="note">No listing is filed under this issue today. This page is rebuilt every morning '
+                f'from our eBay listings.</p>\n{asof}  </section>\n')
+    # the other numbers of the same issue (issue_box's rule: the same name and the same date), each with its own page
+    also = [k for k in keys if k != key and facts[k]["issue"] == f["issue"] and facts[k]["issued"] == f["issued"]]
+    if also:
+        out += ('  <section class="issue" aria-labelledby="also-h">\n    <h2 id="also-h">Also in this issue</h2>\n'
+                '    <ul class="facts">\n'
+                + "".join(li(f'<a href="{issue_url(k)}">Scott #{esc(scott_text(k))}</a>',
+                             ", ".join(v for v in (facts[k].get("design"), facts[k]["face"]) if v)) for k in also)
+                + f'    </ul>\n    <p class="note">{issue_sources([facts[k] for k in also], "")}</p>\n  </section>\n')
+    # the nearest other numbers that have a photographed listing, working outwards from this one; never a number already
+    # named above, and never the same listing twice (a lot is filed under every number it names)
+    near, seen = [], {r["item"] for r in mine}
+    for d in range(1, len(keys)):
+        if len(near) >= RELATED:
+            break
+        for j in (i + d, i - d):
+            k = keys[j] if 0 <= j < len(keys) else None
+            r = (next((r for r in shelf.get(k, []) if r["item"] in imgs and r["item"] not in seen), None)
+                 if k and k not in also else None)
+            if r and len(near) < RELATED:
+                near.append((j, k, r))
+                seen.add(r["item"])
+    if near:
+        out += ('  <section class="related" aria-labelledby="more-h"><h2 id="more-h">More issues on the shelf</h2>\n'
+                '  <ul class="stamps">\n' + "\n".join("    " + issue_card(k, facts[k], r, imgs) for _, k, r in sorted(near))
+                + '\n  </ul>\n  <p class="note">Names and dates checked against the Scott catalog or USPS; each '
+                "issue's page names its source.</p></section>\n")
+    # the number before and the number after in catalog order (plain links: these pages are not one paginated series)
+    before = f'<a href="{issue_url(keys[i - 1])}">Scott #{esc(scott_text(keys[i - 1]))}</a>' if i else ""
+    after = f'<a href="{issue_url(keys[i + 1])}">Scott #{esc(scott_text(keys[i + 1]))}</a>' if i + 1 < len(keys) else ""
+    out += (f'  <nav class="pager" aria-label="More Scott numbers">{before}<a href="/catalog/{ISSUE_DIR}/">'
+            f'All Scott numbers</a>{after}</nav>\n'
+            '  <p class="note"><a href="/catalog/">Back to the full catalog</a></p>\n' + FOOT + CF_BEACON + "</body>\n</html>\n")
+    return out
+
+
+def build_issue_index(keys, facts, shelf, meta):
+    """/catalog/issue/: every issue page in catalog order, in sections (plain numbers by the thousand, then one section
+    per lettered prefix), each row with the number, the issue's name, date and face value and today's listing count."""
+    n, listed = len(keys), sum(1 for k in keys if shelf.get(k))
+    out = head(f"Stamps by Scott number: {n} checked issues | StampedeUSA",
+               f"Find a stamp by Scott number: {n} issues with facts checked against the Scott catalog or USPS, and "
+               "StampedeUSA's listings of each. Every listing opens on eBay.",
+               f"{SITE}/catalog/{ISSUE_DIR}/", "images/hero.jpg")
+    groups = {}                                  # {section anchor: its numbers}; an anchor never depends on its position
+    for k in keys:
+        prefix, number, _ = scott_parts(k)
+        groups.setdefault(f"scott-{prefix.lower()}" if prefix else f"scott-{number // 1000 * 1000}", []).append(k)
+    parts = [(anchor, ks, f"#{scott_text(ks[0])}" + (f" to #{scott_text(ks[-1])}" if len(ks) > 1 else ""))
+             for anchor, ks in groups.items()]
+    out += f"""  <section class="hero">
+    <p class="crumbs"><a href="/catalog/">Catalog</a> &rsaquo; Scott numbers</p>
+    <h1>Find it by Scott number.</h1>
+    <p class="lede">{n} stamp issues with facts checked against the Scott catalog or USPS, in catalog order;
+      each number's page names its source. {listed} {"is" if listed == 1 else "are"} on the shelf today, and every listing
+      opens on eBay, where the price, bids and photos are always current.</p>
+    <p class="asof">Listings as of {esc(meta.get("as_of", ""))}.</p>
+    <nav class="jump" aria-label="Number ranges"><ul>
+"""
+    out += "".join(f'      <li><a href="#{anchor}">{esc(words)}</a></li>\n' for anchor, _, words in parts)
+    out += "    </ul></nav>\n  </section>\n"
+    for anchor, ks, words in parts:
+        out += (f'  <section class="related" id="{anchor}" aria-labelledby="{anchor}-h"><h2 id="{anchor}-h">Scott {esc(words)}</h2>\n'
+                '  <ul class="numbers">\n')
+        for k in ks:
+            f, c = facts[k], len(shelf.get(k, []))
+            out += (f'    <li><a href="{issue_url(k)}">Scott #{esc(scott_text(k))}</a><span class="what">{esc(f["issue"])} &middot; '
+                    f'{esc(f["issued"])} &middot; {esc(f["face"])}</span>'
+                    + (f'<span class="on">{c} listing{"" if c == 1 else "s"}</span>' if c else "") + "</li>\n")
+        out += "  </ul></section>\n"
+    out += '  <p class="note"><a href="/catalog/">Back to the full catalog</a></p>\n' + FOOT + CF_BEACON + "</body>\n</html>\n"
+    return out
+
+
 def main():
     rows, imgs, meta = load()
     now = build_now()
@@ -899,16 +1111,23 @@ def main():
     by_cat = {}
     for r in rows:
         by_cat.setdefault(r["category"], []).append(r)
-    write(os.path.join(out_dir, "index.html"), build_index(rows, imgs, meta))
     issues = load_issues()
+    # the issue pages: one per checked Scott number, listed or not, so their addresses never depend on the day's listings
+    keys, shelf = issue_keys(issues[0]), issue_shelf(rows, issues)
+    write(os.path.join(out_dir, "index.html"), build_index(rows, imgs, meta, len(keys)))
     for r in rows:
         write(os.path.join(out_dir, "item", f"{r['item']}.html"), build_item(r, by_cat, imgs, issues))
     targets = moved_targets(moved, rows)
     for old, r in sorted(targets.items()):
         write(os.path.join(out_dir, "item", f"{old}.html"), build_moved(r))
     with_facts = sum(1 for r in rows if issue_box(r["title"], issues))
+    if keys:
+        write(os.path.join(out_dir, ISSUE_DIR, "index.html"), build_issue_index(keys, issues[0], shelf, meta))
+    for k in keys:
+        write(os.path.join(out_dir, ISSUE_DIR, f"scott-{k.lower()}.html"), build_issue(k, keys, issues[0], shelf, imgs, meta))
+    issue_urls = ([f"{SITE}/catalog/{ISSUE_DIR}/"] + [SITE + issue_url(k) for k in keys]) if keys else []
     urls = [f"{SITE}/{p}" if p != "index.html" else f"{SITE}/" for p in PAGES + SITEMAP_EXTRA] + [f"{SITE}/catalog/"] + \
-           [f"{SITE}/catalog/item/{r['item']}.html" for r in rows]
+           issue_urls + [f"{SITE}/catalog/item/{r['item']}.html" for r in rows]
     sm = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
     sm += "".join(f"  <url><loc>{esc(u)}</loc><lastmod>{lastmod}</lastmod></url>\n" for u in urls) + "</urlset>\n"
     write(os.path.join(HERE, "sitemap.xml"), sm)
@@ -934,6 +1153,7 @@ def main():
           f"shop categories {ncat}, home newly listed {len(newest)}, home category sheet {len(sheet)}, "
           f"about tiles {len(tiles)}, feedback fresh {len(fresh)}, sale markdowns {len(marked)}, "
           f"sale ending soonest {len(soon)} (clock {now:%Y-%m-%dT%H:%M:%SZ}), as of {lastmod}, "
+          f"issue pages {len(keys)} ({sum(1 for k in keys if shelf.get(k))} with a listing), "
           f"moved pages {len(targets)} (of {len(moved)} recorded)")
 
 

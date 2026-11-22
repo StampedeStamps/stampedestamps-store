@@ -137,6 +137,35 @@ main { display: block; max-width: 72rem; margin: 0 auto; padding: 1.5rem 1rem 3r
 @media (prefers-color-scheme: dark) { .issue h2 { border-color: var(--lilac); } }
 .issue .facts { margin: .3rem 0 .5rem; }
 
+/* Issue pages (2026-11-21): one page per checked Scott number, /catalog/issue/scott-<number>.html. A page with one
+   listing uses the item page's own layout above; these rules cover the rest. */
+.item.solo { grid-template-columns: minmax(0, 1fr); } /* several listings, or none: no photo beside the heading */
+.item h1 span { display: block; font-size: .62em; line-height: 1.12; margin-top: .3rem; } /* the issue's name, under its Scott number */
+.key { margin: .8rem 0 0; max-width: 50ch; }
+/* phones, one listing: the button comes straight under the heading, as on item pages; then the face value and date, then the words */
+.item-stamp + .buy .key { order: 1; }
+.item-stamp + .buy .note, .item-stamp + .buy .asof { order: 2; }
+.buy .asof, .related .asof { margin-top: .4rem; }
+.item-stamp .frame a { display: block; } /* the photo opens the listing's catalog page */
+.btn.alt { background: transparent; color: var(--link); border-color: var(--link); }
+.shelf .stamps li { flex-direction: column; }
+.shelf .btn { display: block; font-size: 1.35rem; padding: .6rem .8rem; margin: .55rem 0 0; }
+.related .note { margin-top: .8rem; }
+.pager { display: flex; flex-wrap: wrap; gap: .2rem 1.6rem; margin: 2.2rem 0 .6rem; }
+.pager a { display: inline-block; padding: .35rem 0; }
+.jump ul { list-style: none; padding: 0; margin: 1rem 0 0; display: flex; flex-wrap: wrap; gap: .1rem 1.3rem; }
+.jump a { display: inline-block; padding: .35rem 0; }
+.numbers { list-style: none; padding: 0; margin: .4rem 0 0; max-width: 46rem; }
+.numbers li { display: grid; grid-template-columns: 8rem minmax(0, 1fr) auto; gap: .1rem .9rem; align-items: baseline;
+  padding: .45rem 0; border-bottom: 1px solid var(--rule); }
+.numbers a { font-family: var(--gothic); font-size: 1.3rem; line-height: 1.25; text-decoration: none; }
+.numbers a:hover { text-decoration: underline 1px; }
+.numbers .on { font-size: .9rem; color: var(--soft); white-space: nowrap; }
+@media (max-width: 43.99rem) {
+  .numbers li { grid-template-columns: minmax(0, 1fr) auto; }
+  .numbers .what { grid-column: 1 / -1; grid-row: 2; }
+}
+
 /* Footer */
 footer.selvage { margin-top: 2rem; }
 .foot { max-width: 72rem; margin: 0 auto; padding: 1.4rem 1rem 1.8rem; display: flex; flex-wrap: wrap; gap: .4rem 2rem; align-items: baseline; }
