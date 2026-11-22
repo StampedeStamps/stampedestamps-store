@@ -142,7 +142,9 @@ main { display: block; max-width: 72rem; margin: 0 auto; padding: 1.5rem 1rem 3r
 .item.solo { grid-template-columns: minmax(0, 1fr); } /* several listings, or none: no photo beside the heading */
 .item h1 span { display: block; font-size: .62em; line-height: 1.12; margin-top: .3rem; } /* the issue's name, under its Scott number */
 .key { margin: .8rem 0 0; max-width: 50ch; }
-.item-stamp + .buy .key { order: 1; } /* phones, one listing: the button comes straight under the heading, as on item pages */
+/* phones, one listing: the button comes straight under the heading, as on item pages; then the face value and date, then the words */
+.item-stamp + .buy .key { order: 1; }
+.item-stamp + .buy .note, .item-stamp + .buy .asof { order: 2; }
 .buy .asof, .related .asof { margin-top: .4rem; }
 .item-stamp .frame a { display: block; } /* the photo opens the listing's catalog page */
 .btn.alt { background: transparent; color: var(--link); border-color: var(--link); }

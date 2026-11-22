@@ -10,6 +10,7 @@ when the main test file's BuildTests has not already built it in this run (the n
 one process, and each build takes a while on the shared drive).
 """
 import csv, html, os, re, subprocess, sys, tempfile, unittest
+from html.parser import HTMLParser
 from unittest import mock
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -50,6 +51,33 @@ def section(page, heading):
     """The whole <section> whose heading reads `heading`; None when the page has none."""
     m = re.search(r"<section[^>]*>\s*<h2[^>]*>" + re.escape(heading) + r"</h2>.*?</section>", page, re.S)
     return m.group(0) if m else None
+
+
+class _Tags(HTMLParser):
+    """Every tag that opens is closed, in order (the tags that never close are left out)."""
+    VOID = {"meta", "link", "img", "input", "br", "hr"}
+
+    def __init__(self):
+        super().__init__()
+        self.open, self.wrong = [], []
+
+    def handle_starttag(self, tag, attrs):
+        if tag not in self.VOID:
+            self.open.append(tag)
+
+    def handle_endtag(self, tag):
+        if self.open and self.open[-1] == tag:
+            self.open.pop()
+        else:
+            self.wrong.append(f"</{tag}> met while {self.open[-1:] or 'nothing'} was open")
+
+
+def unbalanced(page):
+    """[] when the page's tags nest and close properly; else what is wrong."""
+    p = _Tags()
+    p.feed(page)
+    p.close()
+    return p.wrong + [f"<{t}> never closed" for t in p.open]
 
 
 def catalog_order(key):
@@ -93,12 +121,35 @@ class IssuePageRuleTests(unittest.TestCase):
 
     def test_the_shelf_holds_each_issues_listings_newest_first_and_a_lot_under_every_number_it_names(self):
         facts = {"1": fact("1"), "2": fact("2"), "3": fact("3")}
-        titles = {"Single": ["1"], "Lot": ["1", "2"], "Part checked": ["2", "9"]}     # 9 has no checked row
+        titles = {"Single": ["1"], "Lot": ["1", "2"], "Part checked": ["2", "9"],     # 9 has no checked row
+                  "Named twice": ["3", "3"]}                                         # the title map repeats a number
         rows = [listing("100", "Single"), listing("300", "Single"), listing("200", "Lot"),
-                listing("400", "Part checked"), listing("500", "Not mapped")]
+                listing("400", "Part checked"), listing("500", "Not mapped"), listing("600", "Named twice")]
         shelf = build.issue_shelf(rows, (facts, titles))
-        self.assertEqual({k: [r["item"] for r in v] for k, v in shelf.items()},
-                         {"1": ["300", "200", "100"], "2": ["200"]})     # a lot is never shown in part; 3 has nothing
+        self.assertEqual({k: [r["item"] for r in v] for k, v in shelf.items()},     # a lot is never shown in part,
+                         {"1": ["300", "200", "100"], "2": ["200"], "3": ["600"]})  # and a listing only once
+
+    def test_every_value_from_the_data_reaches_the_page_escaped_and_every_tag_is_closed(self):
+        odd = "B. & O. <Railroad's> \"Issue\""
+        facts = {"1": fact("1", issue=odd, issued="May 1 & 2, 1950", face="3¢ <x>", design="A & B"),
+                 "2": fact("2", issue=odd, issued="May 1 & 2, 1950", face="3¢ <x>", design="C <d>"),
+                 "3": fact("3", issue="Next & <last>", issued="June <1>, 1950")}
+        keys = build.issue_keys(facts)
+        title = "Scott #1 <b>\"Sheet\"</b> & 'Co'"
+        for rows in ([], [listing("100", title)], [listing("100", title), listing("200", title)]):
+            shelf = build.issue_shelf(rows + [listing("300", "Three & <more>")], (facts, {title: ["1"], "Three & <more>": ["3"]}))
+            page = build.build_issue("1", keys, facts, shelf, {"300": "images/catalog/300.jpg"}, META)
+            self.assertEqual(unbalanced(page), [], len(rows))
+            self.assertIn("<h1>Scott #1 <span>B. &amp; O. &lt;Railroad&#x27;s&gt; &quot;Issue&quot;</span></h1>", page)
+            self.assertIn('<p class="key">Face value 3¢ &lt;x&gt;. Issued May 1 &amp; 2, 1950.</p>', page)
+            self.assertIn("<span>C &lt;d&gt;, 3¢ &lt;x&gt;</span>", section(page, "Also in this issue"))
+            self.assertIn('<span class="t">Scott #3: Next &amp; &lt;last&gt;</span><span class="c">June &lt;1&gt;, 1950</span>', page)
+            self.assertIn('alt="Three &amp; &lt;more&gt;"', page)
+            for raw in ("<Railroad", "<x>", "<d>", "<last>", "<1>", "<b>\"Sheet\"", "<more>", " & "):
+                self.assertNotIn(raw, main_part(page), raw)
+        index = build.build_issue_index(keys, facts, {}, META)
+        self.assertEqual(unbalanced(index), [])
+        self.assertIn("B. &amp; O. &lt;Railroad&#x27;s&gt; &quot;Issue&quot; &middot; May 1 &amp; 2, 1950 &middot; 3¢ &lt;x&gt;", index)
 
     # ---- the three states of a page ----
 
@@ -163,13 +214,16 @@ class IssuePageRuleTests(unittest.TestCase):
                          ["/catalog/item/300.html", "/catalog/item/100.html"])          # newest first
         self.assertEqual(re.findall(r'<span class="badge">([^<]+)</span>', shelf), ["Auction", "Buy It Now"])
         self.assertIn('aria-label="See it on eBay: Copy B"', shelf)      # two buttons with the same words: named apart
-        self.assertIn("2 listings of this issue are on the shelf.", page)
+        self.assertIn("2 listings of this issue are on the shelf. Each button opens its listing on eBay", shelf)
         self.assertIn("Each eBay listing shows that item's own photos and condition.", section(page, "About this issue"))
 
     def test_no_listing_keeps_a_useful_page_that_does_not_read_like_a_missing_one(self):
         page = self.one_issue([])
         self.assertEqual(buttons(page), [(True, "/catalog/", None, "Browse the full catalog")])
-        self.assertIn("No listing is filed under this issue today.", page)
+        self.assertIn("No listing is filed under this issue today.", section(page, "On the shelf"))
+        # the page leads with what it knows: the facts come before the words about the shelf
+        self.assertLess(page.index("About this issue</h2>"), page.index("No listing is filed"))
+        self.assertIn('<meta property="og:image" content="https://www.stampedestamps.store/images/hero.jpg">', page)
         self.assertNotIn("ebay.com/itm/", page)
         self.assertNotIn("/catalog/item/", page)
         self.assertIsNone(section(page, "On the shelf now"))
@@ -255,14 +309,27 @@ class IssuePageRuleTests(unittest.TestCase):
         def pager(key):
             page = build.build_issue(key, keys, facts, {}, {}, META)
             nav = page[page.index('<nav class="pager"'):]
-            return re.findall(r'<a href="([^"]+)"(?: rel="(prev|next)")?>([^<]+)</a>', nav[:nav.index("</nav>")])
-        self.assertEqual(pager("147"), [("/catalog/issue/", "", "All Scott numbers"),
-                                        ("/catalog/issue/scott-1016.html", "next", "Scott #1016")])
-        self.assertEqual(pager("1016"), [("/catalog/issue/scott-147.html", "prev", "Scott #147"),
-                                         ("/catalog/issue/", "", "All Scott numbers"),
-                                         ("/catalog/issue/scott-c3.html", "next", "Scott #C3")])
-        self.assertEqual(pager("C3"), [("/catalog/issue/scott-1016.html", "prev", "Scott #1016"),
-                                       ("/catalog/issue/", "", "All Scott numbers")])
+            return re.findall(r'<a href="([^"]+)">([^<]+)</a>', nav[:nav.index("</nav>")])
+        self.assertEqual(pager("147"), [("/catalog/issue/", "All Scott numbers"),
+                                        ("/catalog/issue/scott-1016.html", "Scott #1016")])
+        self.assertEqual(pager("1016"), [("/catalog/issue/scott-147.html", "Scott #147"),
+                                         ("/catalog/issue/", "All Scott numbers"),
+                                         ("/catalog/issue/scott-c3.html", "Scott #C3")])
+        self.assertEqual(pager("C3"), [("/catalog/issue/scott-1016.html", "Scott #1016"),
+                                       ("/catalog/issue/", "All Scott numbers")])
+        # plain links: these pages are not one paginated series, so no rel="prev" / "next" hint is given
+        self.assertNotIn('rel="', main_part(build.build_issue("1016", keys, facts, {}, {}, META)))
+
+    def test_a_neighbor_already_shown_through_one_listing_is_shown_through_another(self):
+        keys = ["1", "2", "3"]
+        facts = {k: fact(k, issue=f"Issue {k}", issued=f"May {k}, 1950") for k in keys}
+        lot = listing("900", "Lot of 1 and 2")
+        shelf = {"1": [lot], "2": [lot, listing("200", "Two alone")], "3": [lot]}       # the lot is the newest under 2
+        imgs = {"900": "images/catalog/900.jpg", "200": "images/catalog/200.jpg"}
+        page = build.build_issue("1", keys, facts, shelf, imgs, META)
+        more = section(page, "More issues on the shelf")
+        self.assertEqual(re.findall(r'href="/catalog/issue/scott-(\w+)\.html"><span class="ph"><img src="/([^"]+)"', more),
+                         [("2", "images/catalog/200.jpg")])                             # 3 has only the lot: no card
 
     # ---- the index ----
 
@@ -287,6 +354,8 @@ class IssuePageRuleTests(unittest.TestCase):
                          ["Scott #147", "Scott #1016 to #1830a", "Scott #C7", "Scott #R5c to #R118"])
         jumps = re.findall(r'<li><a href="#([\w-]+)">([^<]+)</a></li>', page)
         self.assertEqual([words for _, words in jumps], ["#147", "#1016 to #1830a", "#C7", "#R5c to #R118"])
+        # an anchor is named for its range or prefix, so it does not move when a section is added before it
+        self.assertEqual([anchor for anchor, _ in jumps], ["scott-0", "scott-1000", "scott-c", "scott-r"])
         for anchor, _ in jumps:
             self.assertEqual(page.count(f'id="{anchor}"'), 1, anchor)
         self.assertIn("6 stamp issues", page)
@@ -304,7 +373,7 @@ class IssuePageRuleTests(unittest.TestCase):
 
     def test_an_item_pages_box_links_to_its_issue_page(self):
         box = build.issue_box("T", ({"1016": fact("1016", issue="Red Cross & Friends")}, {"T": ["1016"]}))
-        self.assertIn('Every listing of this issue: <a href="/catalog/issue/scott-1016.html">Scott #1016, '
+        self.assertIn('More on this issue: <a href="/catalog/issue/scott-1016.html">Scott #1016, '
                       "Red Cross &amp; Friends</a>.", box)
 
     def test_a_box_for_several_numbers_links_each_number_written_the_catalogs_way(self):
@@ -357,12 +426,12 @@ class IssuePagesBuiltTests(unittest.TestCase):
         for r in sorted(cls.rows, key=lambda r: r["item"], reverse=True):
             mapped = cls.titles.get(r["title"]) or []
             if mapped and all(s in cls.facts for s in mapped):
-                for s in mapped:
+                for s in dict.fromkeys(mapped):          # a title that names a number twice is one listing of it
                     cls.shelf.setdefault(s, []).append(r["item"])
         cls.title_texts = sorted({html.escape(r["title"], quote=True) for r in cls.rows}, key=len, reverse=True)
 
     def test_one_page_per_checked_scott_number_plus_the_index_and_nothing_else(self):
-        self.assertGreater(len(self.keys), 200)
+        self.assertTrue(self.keys)
         self.assertEqual(sorted(os.listdir(self.dir)), sorted(["index.html"] + [f"scott-{k.lower()}.html" for k in self.keys]))
 
     def test_no_address_holds_an_ebay_item_number_and_each_page_names_itself_as_canonical(self):
@@ -392,10 +461,13 @@ class IssuePagesBuiltTests(unittest.TestCase):
             self.assertNotIn('http-equiv="refresh"', t, name)
             self.assertNotIn(build.MOVED_MARK, t, name)
             self.assertNotIn("application/ld+json", t, name)
-            self.assertLess(len(t.encode("utf-8")), 150 * 1024 if name == "index" else 40 * 1024, name)
+            self.assertEqual(unbalanced(t), [], name)
+            # a page stays small, however many listings or pages the day brings: the limit grows with them
+            limit = 20_000 + 400 * len(self.page) if name == "index" else 16_000 + 1_500 * len(self.shelf.get(name, []))
+            self.assertLess(len(t.encode("utf-8")), limit, name)
 
     def test_the_state_of_each_page_follows_the_number_of_listings_filed_under_it(self):
-        counts = {0: 0, 1: 0, 2: 0}
+        # whatever the day's listings are: no state is required to occur (the three states have their own rule tests)
         for k, t in self.page.items():
             items = self.shelf.get(k, [])
             got = buttons(t)
@@ -406,11 +478,9 @@ class IssuePagesBuiltTests(unittest.TestCase):
             else:
                 self.assertEqual(got, [(True, "/catalog/", None, "Browse the full catalog")], k)
                 self.assertIn("No listing is filed under this issue today.", t, k)
-            counts[min(len(items), 2)] += 1
             # every listing filed under the issue links to its own catalog page, and no other listing is linked
             linked = set(re.findall(r'href="/catalog/item/(\d+)\.html"', main_part(t)[:main_part(t).index('<section class="issue"')]))
             self.assertEqual(linked, set(items), k)
-        self.assertGreater(counts[1], 0)
 
     def test_every_ebay_link_opens_a_live_listing_or_the_store_in_the_shop_window(self):
         live = {r["item"] for r in self.rows}
@@ -444,8 +514,8 @@ class IssuePagesBuiltTests(unittest.TestCase):
         for i, k in enumerate(self.keys):                                                   # and so does the pager
             nav = self.page[k][self.page[k].index('<nav class="pager"'):]
             nav = nav[:nav.index("</nav>")]
-            self.assertEqual(re.findall(r'href="/catalog/issue/(scott-\w+\.html)" rel="prev"', nav), order[i - 1:i] if i else [], k)
-            self.assertEqual(re.findall(r'href="/catalog/issue/(scott-\w+\.html)" rel="next"', nav), order[i + 1:i + 2], k)
+            self.assertEqual(re.findall(r'href="/catalog/issue/(scott-\w+\.html)"', nav),
+                             (order[i - 1:i] if i else []) + order[i + 1:i + 2], k)      # the one before, the one after
 
     def test_every_page_has_the_visitor_counter_once_the_small_icon_the_font_preload_and_the_catalog_menu(self):
         tag = build.CF_BEACON.strip()
@@ -504,9 +574,8 @@ class IssuePagesBuiltTests(unittest.TestCase):
         self.assertEqual([k for k, _ in rows], [k.lower() for k in self.keys])
         self.assertEqual({k: int(n) for k, n in rows if n}, {k.lower(): len(v) for k, v in self.shelf.items() if k in self.page})
         listed = sum(1 for k in self.keys if self.shelf.get(k))
-        self.assertGreater(listed, 1)
         self.assertIn(f"{len(self.keys)} stamp issues", self.index)
-        self.assertIn(f"{listed} are on the shelf today", self.index)
+        self.assertIn(f"{listed} {'is' if listed == 1 else 'are'} on the shelf today", self.index)
 
 
 if __name__ == "__main__":

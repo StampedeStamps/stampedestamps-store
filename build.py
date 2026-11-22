@@ -139,7 +139,7 @@ def load_issues():
 # A row gets a page only when its key is a well-formed Scott number: a capital prefix of up to four letters, a number
 # that does not start with 0, at most one letter after it. "R024C" (a listing title's slip) gets none.
 ISSUE_DIR = "issue"
-SCOTT_KEY = re.compile(r"([A-Z]{0,4})([1-9]\d{0,3})([A-Z]?)")
+SCOTT_KEY = re.compile(r"([A-Z]{0,4})([1-9]\d{0,3})([A-Z]?)", re.ASCII)
 # The Scott catalog writes a letter after the number small (a pane, block or variety: 1368 "a. Block of 4") unless the
 # number is a major number of its own. Each number here was read off the catalog page: 1338F on 2026-11-21. A new row
 # for a major number with a capital letter is added here in the same pull request.
@@ -223,7 +223,7 @@ def issue_box(title, issues):
         h2 = "About this issue"
         lis = "".join(li(label, found[0][k]) for k, label in ISSUE_FIELDS if found[0].get(k))
         if issue_url(scotts[0]):
-            more = (f'    <p class="note">Every listing of this issue: <a href="{issue_url(scotts[0])}">'
+            more = (f'    <p class="note">More on this issue: <a href="{issue_url(scotts[0])}">'
                     f'Scott #{esc(scott_text(scotts[0]))}, {esc(found[0]["issue"])}</a>.</p>\n')
     elif len({f["issue"] for f in found}) == 1 and len({f["issued"] for f in found}) == 1:
         h2 = "About this issue"                     # one issue, several designs (a se-tenant block or sheet)
@@ -986,19 +986,21 @@ def build_issue(key, keys, facts, shelf, imgs, meta):
         out += (f'  <div class="item solo">\n    <div class="buy">\n{h1}{key_line}    </div>\n  </div>\n'
                 '  <section class="related shelf" aria-labelledby="shelf-h"><h2 id="shelf-h">On the shelf now</h2>\n'
                 '  <ul class="stamps">\n' + "\n".join("    " + issue_listing_card(r, imgs) for r in mine)
-                + f'\n  </ul>\n      <p class="note">{len(mine)} listings of this issue are on the shelf. Each opens on '
-                f'eBay, where the price, bids and every photo are current.</p>\n{asof}  </section>\n')
+                + f'\n  </ul>\n      <p class="note">{len(mine)} listings of this issue are on the shelf. Each button '
+                f'opens its listing on eBay, where the price, bids and every photo are current.</p>\n{asof}  </section>\n')
         tail = " Each eBay listing shows that item's own photos and condition."
-    else:
+    else:                                       # the facts lead; the words about the shelf come after them, below
         out += (f'  <div class="item solo">\n    <div class="buy">\n{h1}{key_line}'
-                '      <a class="btn" href="/catalog/">Browse the full catalog</a>\n'
-                '      <p class="note">No listing is filed under this issue today. This page is rebuilt every morning '
-                f'from our eBay listings.</p>\n{asof}    </div>\n  </div>\n')
+                '      <a class="btn" href="/catalog/">Browse the full catalog</a>\n    </div>\n  </div>\n')
         tail = ""
     li = lambda label, text: f"      <li><b>{label}</b><span>{esc(text)}</span></li>\n"
     out += ('  <section class="issue" aria-labelledby="issue-h">\n    <h2 id="issue-h">About this issue</h2>\n'
             '    <ul class="facts">\n' + "".join(li(label, f[k]) for k, label in ISSUE_FIELDS if f.get(k))
             + f'    </ul>\n    <p class="note">{issue_sources([f], tail)}</p>\n  </section>\n')
+    if not mine:                                # said after the facts, so the page leads with what it knows
+        out += ('  <section class="issue" aria-labelledby="shelf-h">\n    <h2 id="shelf-h">On the shelf</h2>\n'
+                '    <p class="note">No listing is filed under this issue today. This page is rebuilt every morning '
+                f'from our eBay listings.</p>\n{asof}  </section>\n')
     # the other numbers of the same issue (issue_box's rule: the same name and the same date), each with its own page
     also = [k for k in keys if k != key and facts[k]["issue"] == f["issue"] and facts[k]["issued"] == f["issued"]]
     if also:
@@ -1015,8 +1017,9 @@ def build_issue(key, keys, facts, shelf, imgs, meta):
             break
         for j in (i + d, i - d):
             k = keys[j] if 0 <= j < len(keys) else None
-            r = next((r for r in shelf.get(k, []) if r["item"] in imgs), None) if k and k not in also else None
-            if r and r["item"] not in seen and len(near) < RELATED:
+            r = (next((r for r in shelf.get(k, []) if r["item"] in imgs and r["item"] not in seen), None)
+                 if k and k not in also else None)
+            if r and len(near) < RELATED:
                 near.append((j, k, r))
                 seen.add(r["item"])
     if near:
@@ -1024,9 +1027,9 @@ def build_issue(key, keys, facts, shelf, imgs, meta):
                 '  <ul class="stamps">\n' + "\n".join("    " + issue_card(k, facts[k], r, imgs) for _, k, r in sorted(near))
                 + '\n  </ul>\n  <p class="note">Names and dates checked against the Scott catalog or USPS; each '
                 "issue's page names its source.</p></section>\n")
-    before = (f'<a href="{issue_url(keys[i - 1])}" rel="prev">Scott #{esc(scott_text(keys[i - 1]))}</a>' if i else "")
-    after = (f'<a href="{issue_url(keys[i + 1])}" rel="next">Scott #{esc(scott_text(keys[i + 1]))}</a>'
-             if i + 1 < len(keys) else "")
+    # the number before and the number after in catalog order (plain links: these pages are not one paginated series)
+    before = f'<a href="{issue_url(keys[i - 1])}">Scott #{esc(scott_text(keys[i - 1]))}</a>' if i else ""
+    after = f'<a href="{issue_url(keys[i + 1])}">Scott #{esc(scott_text(keys[i + 1]))}</a>' if i + 1 < len(keys) else ""
     out += (f'  <nav class="pager" aria-label="More Scott numbers">{before}<a href="/catalog/{ISSUE_DIR}/">'
             f'All Scott numbers</a>{after}</nav>\n'
             '  <p class="note"><a href="/catalog/">Back to the full catalog</a></p>\n' + FOOT + CF_BEACON + "</body>\n</html>\n")
@@ -1041,12 +1044,12 @@ def build_issue_index(keys, facts, shelf, meta):
                f"Find a stamp by Scott number: {n} issues with facts checked against the Scott catalog or USPS, and "
                "StampedeUSA's listings of each. Every listing opens on eBay.",
                f"{SITE}/catalog/{ISSUE_DIR}/", "images/hero.jpg")
-    groups = {}
+    groups = {}                                  # {section anchor: its numbers}; an anchor never depends on its position
     for k in keys:
         prefix, number, _ = scott_parts(k)
-        groups.setdefault((prefix, 0 if prefix else number // 1000), []).append(k)
-    parts = [(f"n{g}", ks, f"#{scott_text(ks[0])}" + (f" to #{scott_text(ks[-1])}" if len(ks) > 1 else ""))
-             for g, ks in enumerate(groups.values(), 1)]
+        groups.setdefault(f"scott-{prefix.lower()}" if prefix else f"scott-{number // 1000 * 1000}", []).append(k)
+    parts = [(anchor, ks, f"#{scott_text(ks[0])}" + (f" to #{scott_text(ks[-1])}" if len(ks) > 1 else ""))
+             for anchor, ks in groups.items()]
     out += f"""  <section class="hero">
     <p class="crumbs"><a href="/catalog/">Catalog</a> &rsaquo; Scott numbers</p>
     <h1>Find it by Scott number.</h1>
