@@ -32,11 +32,23 @@ def tree_hash():
     return h.hexdigest()
 
 
+def is_moved(path):
+    """A moved page (an old address that sends visitors on to the stamp's live page), not a page of its own."""
+    with open(path, encoding="utf-8") as f:
+        return build.MOVED_MARK in f.read()
+
+
 def pages():
+    """The catalog index and every LIVE item page; moved pages have their own tests (MovedPageTests)."""
     out = [os.path.join(ROOT, "catalog", "index.html")]
     d = os.path.join(ROOT, "catalog", "item")
-    out += [os.path.join(d, f) for f in sorted(os.listdir(d))]
+    out += [os.path.join(d, f) for f in sorted(os.listdir(d)) if not is_moved(os.path.join(d, f))]
     return out
+
+
+def moved_pages():
+    d = os.path.join(ROOT, "catalog", "item")
+    return [os.path.join(d, f) for f in sorted(os.listdir(d)) if is_moved(os.path.join(d, f))]
 
 
 def read(name):
@@ -83,8 +95,14 @@ class BuildTests(unittest.TestCase):
                             key=len, reverse=True)
 
     def test_one_page_per_listing(self):
-        items = os.listdir(os.path.join(ROOT, "catalog", "item"))
+        items = [os.path.basename(p) for p in pages()[1:]]
         self.assertEqual(sorted(items), sorted(f"{r['item']}.html" for r in self.rows))
+        # anything else in the folder is a moved page for an old address the record holds (MovedPageTests)
+        recorded = set(build.load_moved())
+        others = set(os.listdir(os.path.join(ROOT, "catalog", "item"))) - set(items)
+        self.assertEqual(sorted(others), sorted(os.path.basename(p) for p in moved_pages()))
+        for f in others:
+            self.assertIn(f[:-5], recorded, f)
 
     def test_item_page_links_its_own_listing(self):
         for r in self.rows:
@@ -437,7 +455,7 @@ class BuildTests(unittest.TestCase):
         current = {"index.html": "Home", "shop.html": "Shop", "sale.html": "Sale", "about.html": "About",
                    "feedback.html": "Feedback", "catalog/index.html": "Catalog",
                    "rhyme-book.html": "Free Rhyme Book"}
-        item = os.path.join("catalog", "item", sorted(os.listdir(os.path.join(ROOT, "catalog", "item")))[0])
+        item = os.path.join("catalog", "item", min(f"{r['item']}.html" for r in self.rows))   # a live page, never a moved one
         current[item.replace(os.sep, "/")] = "Catalog"
         for name, here in current.items():
             t = read(name)
@@ -534,6 +552,55 @@ class BuildTests(unittest.TestCase):
         sm = open(os.path.join(ROOT, "sitemap.xml"), encoding="utf-8").read()
         for r in self.rows:
             self.assertIn(f"/catalog/item/{r['item']}.html</loc>", sm)
+
+    def test_sitemap_lists_every_hand_written_page_and_no_moved_page(self):
+        # Claude 2026-11-15: the Rhyme Book page went live with no sitemap entry; moved pages are never listed
+        sm = read("sitemap.xml")
+        locs = re.findall(r"<loc>([^<]+)</loc>", sm)
+        self.assertEqual(len(locs), len(set(locs)), "an address listed twice")
+        for name in build.PAGES + build.SITEMAP_EXTRA:
+            self.assertTrue(os.path.exists(os.path.join(ROOT, name)), name)
+            self.assertIn(f"{build.SITE}/{name}" if name != "index.html" else f"{build.SITE}/", locs, name)
+        for p in moved_pages():
+            self.assertNotIn(f"/catalog/item/{os.path.basename(p)}", sm, p)
+
+    def test_moved_pages_send_visitors_on_to_one_live_listing(self):
+        # Claude 2026-11-15: an old address of a relisted stamp sends the visitor (and Google) to its live page
+        live = {r["item"]: r for r in self.rows}
+        moved = build.load_moved()
+        got = {}
+        for p in moved_pages():
+            old = os.path.basename(p)[:-5]
+            t = open(p, encoding="utf-8").read()
+            new = re.search(r'<meta name="stampede-moved-to" content="(\d+)">', t).group(1)
+            got[old] = new
+            url = f"/catalog/item/{new}.html"
+            self.assertNotIn(old, live, old)
+            self.assertIn(new, live, old)
+            self.assertTrue(os.path.exists(os.path.join(ROOT, *url.lstrip("/").split("/"))), old)
+            self.assertIn(f'<meta http-equiv="refresh" content="0; url={url}">', t, old)
+            self.assertIn(f'<link rel="canonical" href="{build.SITE}{url}">', t, old)
+            self.assertIn(f'<a href="{url}">', t, old)
+            self.assertEqual(build.title_key(moved[old]["title"]), build.title_key(live[new]["title"]), old)
+            self.assertNotIn("cloudflareinsights", t, f"{old}: one arrival would count twice (the live page counts it)")
+            self.assertNotIn("$", t.replace(html.escape(live[new]["title"], quote=True), ""), old)
+        self.assertEqual(got, {k: r["item"] for k, r in build.moved_targets(moved, self.rows).items()})
+
+    def test_moved_record_is_sorted_lf_and_never_lists_a_live_listing(self):
+        # LF holds after ANY build, however git checked the file out: build.py writes the record on every run
+        # (MovedPageRuleTests.test_a_windows_checkout_of_the_record_loads_the_same_and_is_rewritten_lf)
+        raw = open(os.path.join(ROOT, *build.MOVED_CSV.split(os.sep)), "rb").read()
+        self.assertNotIn(b"\r", raw)
+        recs = list(csv.DictReader(raw.decode("utf-8").splitlines()))
+        self.assertEqual(list(recs[0]), ["item", "title", "removed"])
+        items = [r["item"] for r in recs]
+        self.assertEqual(items, sorted(items))
+        self.assertEqual(len(items), len(set(items)))
+        live = {r["item"] for r in self.rows}
+        self.assertEqual([i for i in items if i in live], [], "a live listing's number is in the moved record")
+        for r in recs:
+            self.assertRegex(r["removed"], r"^\d{4}-\d{2}-\d{2}$", r["item"])
+            self.assertTrue(r["title"].strip(), r["item"])
 
     # ---- Sale, About and Feedback (Douglas 2026-10-16, "Polish Sale, About and Feedback") ----
 
@@ -872,6 +939,108 @@ class BuildTests(unittest.TestCase):
         self.assertIn("Checked against the Scott catalog.", one)
         self.assertEqual(build.issue_box("T", ({"1": {"issue": "A", "issued": "1950", "face": "3¢", "source": "Scott catalog",
                                                        "source_url": ""}}, {"T": ["1", "2"]})), "")   # never in part
+
+
+class MovedPageRuleTests(unittest.TestCase):
+    """The moved-page and sitemap-date rules on made-up listings (Claude 2026-11-15; no build needed)."""
+
+    def test_an_old_address_goes_to_the_one_live_listing_with_its_title(self):
+        moved = {"100": {"item": "100", "title": "Scott #1 (Used) 1847 5c Franklin", "removed": "2026-11-01"}}
+        rows = [{"item": "200", "title": "scott #1 (used)  1847 5c FRANKLIN"}, {"item": "300", "title": "Scott #2"}]
+        self.assertEqual({k: r["item"] for k, r in build.moved_targets(moved, rows).items()}, {"100": "200"})
+
+    def test_no_moved_page_when_the_title_is_gone_shared_or_its_number_is_live(self):
+        moved = {"100": {"item": "100", "title": "A", "removed": "d"},     # no live listing has it
+                 "101": {"item": "101", "title": "B", "removed": "d"},     # two live listings have it
+                 "102": {"item": "102", "title": "C", "removed": "d"}}     # its own number is live again
+        rows = [{"item": "200", "title": "B"}, {"item": "201", "title": "B"}, {"item": "102", "title": "C"}]
+        self.assertEqual(build.moved_targets(moved, rows), {})
+
+    def test_titles_match_through_entities_case_and_spacing(self):
+        self.assertEqual(build.title_key("Scott &amp; Co  #5 "), build.title_key("scott & co #5"))
+        self.assertNotEqual(build.title_key("Scott #5"), build.title_key("Scott #5a"))
+
+    def test_note_removed_records_only_pages_whose_listing_has_gone(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            def put(name, text):
+                with open(os.path.join(d, name), "w", encoding="utf-8") as f:
+                    f.write(text)
+            put("200.html", "<title>Live one | StampedeUSA</title>")
+            put("100.html", "<title>Gone &amp; sold | StampedeUSA</title>")
+            put("101.html", build.build_moved({"item": "200", "title": "Live one"}))
+            put("notes.txt", "<title>Not a page | StampedeUSA</title>")
+            moved = {}
+            self.assertEqual(build.note_removed(moved, d, {"200"}, "2026-11-15"), 1)
+            self.assertEqual(moved, {"100": {"item": "100", "title": "Gone & sold", "removed": "2026-11-15"}})
+            self.assertEqual(build.note_removed(moved, d, {"200"}, "2026-11-16"), 0)   # recorded once; its date kept
+            self.assertEqual(moved["100"]["removed"], "2026-11-15")
+            self.assertEqual(build.note_removed({}, os.path.join(d, "missing"), set(), "x"), 0)
+
+    def test_a_moved_page_is_never_read_back_as_a_listing(self):
+        page = build.build_moved({"item": "200", "title": 'Scott #1 "Franklin" <5c>'})
+        self.assertIsNone(build.page_title(page))
+        self.assertIn('<meta http-equiv="refresh" content="0; url=/catalog/item/200.html">', page)
+        self.assertIn("Scott #1 &quot;Franklin&quot; &lt;5c&gt;", page)
+        self.assertEqual(build.page_title("<title>Scott #1 &amp; 2 | StampedeUSA</title>"), "Scott #1 & 2")
+
+    def test_a_listing_that_comes_back_leaves_the_moved_record(self):
+        # a number that dropped out of one export and is live again is no longer "moved"
+        moved = {"100": {"item": "100", "title": "A", "removed": "d"}, "101": {"item": "101", "title": "B", "removed": "d"}}
+        self.assertEqual(build.drop_returned(moved, {"101", "300"}), ["101"])
+        self.assertEqual(sorted(moved), ["100"])
+        self.assertEqual(build.drop_returned(moved, set()), [])
+
+    def _record_in(self, folder, raw):
+        os.makedirs(os.path.join(folder, "data"))
+        with open(os.path.join(folder, *build.MOVED_CSV.split(os.sep)), "wb") as f:
+            f.write(raw)
+
+    def test_a_windows_checkout_of_the_record_loads_the_same_and_is_rewritten_lf(self):
+        # 2026-11-21, found before the merge: with core.autocrlf=true git writes data/moved_items.csv with CRLF, and on
+        # a day when no listing ended nothing rewrote it, so the record's own test failed in the morning refresh
+        import tempfile
+        from unittest import mock
+        lf = b'item,title,removed\n100,"Scott #1, Used",2026-11-01\n101,Scott #2 &amp; 3,2026-11-02\n'
+        with tempfile.TemporaryDirectory() as a, tempfile.TemporaryDirectory() as b:
+            self._record_in(a, lf)
+            self._record_in(b, lf.replace(b"\n", b"\r\n"))
+            with mock.patch.object(build, "HERE", a):
+                from_lf = build.load_moved()
+            with mock.patch.object(build, "HERE", b):
+                from_crlf = build.load_moved()
+                build.write_moved(from_crlf)
+            self.assertEqual(from_crlf, from_lf)
+            self.assertEqual(from_lf["100"], {"item": "100", "title": "Scott #1, Used", "removed": "2026-11-01"})
+            with open(os.path.join(b, *build.MOVED_CSV.split(os.sep)), "rb") as f:
+                self.assertEqual(f.read(), lf)                      # byte for byte the LF file, sorted, no CR
+
+    def test_a_damaged_row_of_the_record_is_left_out_and_never_stops_the_build(self):
+        import tempfile
+        from unittest import mock
+        raw = (b"item,title,removed\n"
+               b"100,Whole row,2026-11-01\n"
+               b"101,,2026-11-01\n"                 # no title
+               b"abc,Not an item number,2026-11-01\n"
+               b"102,Bad date,11/01/2026\n"
+               b"103,Cut short")                     # a write that never finished
+        with tempfile.TemporaryDirectory() as d:
+            self._record_in(d, raw)
+            with mock.patch.object(build, "HERE", d):
+                self.assertEqual(sorted(build.load_moved()), ["100"])
+        with tempfile.TemporaryDirectory() as d:        # no record at all, and a file with another header
+            with mock.patch.object(build, "HERE", d):
+                self.assertEqual(build.load_moved(), {})
+            self._record_in(d, b"a,b\n1,2\n")
+            with mock.patch.object(build, "HERE", d):
+                self.assertEqual(build.load_moved(), {})
+
+    def test_the_moved_page_names_the_live_listing_and_claims_nothing_about_the_stamp(self):
+        # rule 2 (no invented facts): the old and the new listing can be two copies of one issue, so the page says where
+        # the title is listed now and nothing about it being the same stamp
+        page = build.build_moved({"item": "200", "title": "Scott #1"})
+        self.assertIn('<p>Now listed here: <a href="/catalog/item/200.html">Scott #1</a>.</p>', page)
+        self.assertNotIn("This stamp", page)
 
 
 if __name__ == "__main__":
